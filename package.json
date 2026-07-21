@@ -1,0 +1,19 @@
+{
+  "name": "fulcrum",
+  "private": true,
+  "packageManager": "pnpm@9.0.0",
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck",
+    "db:generate": "pnpm --filter @fulcrum/db generate",
+    "db:migrate": "pnpm --filter @fulcrum/db migrate",
+    "db:seed": "pnpm --filter @fulcrum/db seed"
+  },
+  "devDependencies": {
+    "turbo": "^2.1.0",
+    "typescript": "^5.5.0",
+    "@types/node": "^22.0.0"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "@fulcrum/ingest",
+  "version": "0.0.0",
+  "main": "src/index.ts",
+  "dependencies": {
+    "@fulcrum/db": "workspace:*",
+    "@fulcrum/types": "workspace:*"
+  }
+}

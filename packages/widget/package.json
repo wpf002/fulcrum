@@ -1,0 +1,8 @@
+{
+  "name": "@fulcrum/widget",
+  "version": "0.0.0",
+  "main": "src/index.ts",
+  "dependencies": {
+    "@fulcrum/types": "workspace:*"
+  }
+}

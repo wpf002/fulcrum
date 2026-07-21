@@ -1,0 +1,22 @@
+{
+  "name": "@fulcrum/api",
+  "version": "0.0.0",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@fulcrum/db": "workspace:*",
+    "@fulcrum/types": "workspace:*",
+    "fastify": "^4.28.0",
+    "ioredis": "^5.4.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.16.0",
+    "typescript": "^5.5.0",
+    "@types/node": "^22.0.0"
+  }
+}

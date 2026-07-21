@@ -1,0 +1,257 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────────
+// Hard rules baked into this schema (see FULCRUM_BUILD_PLAN.md §1):
+//  - Buyer data is opt-in only: BuyerLead.consentId is a REQUIRED FK.
+//  - Seller data is public records + licensed feeds only. Every
+//    PropertyEvent carries source provenance.
+//  - Money is integer cents (BigInt). No floats for currency.
+//  - Every model output (SellerScore, Match) carries Factor[] provenance,
+//    stored as Json: { label: string, weight: number, direction: "up"|"down" }[]
+// ─────────────────────────────────────────────────────────────
+
+enum OwnerType {
+  OWNER_OCCUPIED
+  ABSENTEE
+  ENTITY
+}
+
+enum PropertyEventType {
+  SALE
+  REFINANCE
+  LIEN
+  NOD_PREFORECLOSURE
+  PROBATE
+  DIVORCE_FILING
+  PERMIT
+  CODE_VIOLATION
+  TAX_DELINQUENT
+  LISTING
+}
+
+enum MatchStatus {
+  SURFACED
+  CONTACTED
+  DISMISSED
+  CONVERTED
+}
+
+enum ResolutionStatus {
+  RESOLVED    // deterministic apn join, or probabilistic above threshold
+  QUARANTINED // below confidence threshold — never surfaced to agents
+}
+
+// ── Property: the anchor. Primary key of the entire system. ──
+
+model Property {
+  id                      String            @id @default(cuid())
+  apn                     String            // assessor parcel number
+  fips                    String            // county FIPS code
+
+  addressLine1            String
+  addressLine2            String?
+  city                    String
+  state                   String
+  zip                     String
+  lat                     Float?
+  lng                     Float?
+  geohash                 String?           // spatial matching
+
+  beds                    Int?
+  baths                   Float?
+  sqftLiving              Int?
+  sqftLot                 Int?
+  yearBuilt               Int?
+  propertyType            String?
+
+  ownerName               String?
+  ownerType               OwnerType?
+  lastSaleDate            DateTime?
+  lastSalePriceCents      BigInt?
+  ownershipTenureMonths   Int?
+
+  assessedValueCents      BigInt?
+  avmEstimateCents        BigInt?
+  mortgageOriginationDate DateTime?
+  mortgageAmountCents     BigInt?
+  mortgageLender          String?
+
+  resolutionStatus        ResolutionStatus  @default(RESOLVED)
+  resolutionConfidence    Float?            // probabilistic match confidence, null = deterministic
+
+  createdAt               DateTime          @default(now())
+  updatedAt               DateTime          @updatedAt
+
+  events                  PropertyEvent[]
+  sellerScores            SellerScore[]
+  matches                 Match[]
+  outcomes                Outcome[]
+
+  @@unique([fips, apn])
+  @@index([zip])
+  @@index([geohash])
+  @@index([state, city])
+}
+
+// ── PropertyEvent: time-series feature source for the seller model. ──
+
+model PropertyEvent {
+  id         String            @id @default(cuid())
+  propertyId String
+  property   Property          @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  type       PropertyEventType
+  occurredAt DateTime
+  source     String            // which feed / court — provenance is mandatory
+  sourceRef  String?           // document/case number in the source system
+  payload    Json?
+
+  createdAt  DateTime          @default(now())
+
+  @@index([propertyId, occurredAt])
+  @@index([type, occurredAt])
+}
+
+// ── SellerScore: ML output per property. ──
+
+model SellerScore {
+  id                    String    @id @default(cuid())
+  propertyId            String
+  property              Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  probabilityListMonths Float     // P(list within N months)
+  score                 Int       // 0–100
+  velocity              Float     @default(0) // score delta over trailing window
+  factors               Json      // Factor[] — every score explains itself
+  modelVersion          String
+  computedAt            DateTime  @default(now())
+
+  outcomes              Outcome[]
+
+  @@index([propertyId, computedAt])
+  @@index([score])
+}
+
+// ── Agent: the customer. ──
+
+model Agent {
+  id               String      @id @default(cuid())
+  name             String
+  email            String      @unique
+  brandConfig      Json?       // logo, colors for embedded widgets
+  subscriptionTier String      @default("trial")
+  territories      Json        // zips + optional polygons defining supply scope
+
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  buyerLeads       BuyerLead[]
+  matches          Match[]
+}
+
+// ── Consent: first-class, load-bearing. Immutable once written. ──
+
+model Consent {
+  id            String     @id @default(cuid())
+  termsVersion  String     // versioned so you can prove what a user saw
+  capturedAt    DateTime   @default(now())
+  ip            String
+  toolSource    String     // which widget/tool captured it
+  channelOptIns Json       // { email: bool, sms: bool, tcpa: bool }
+
+  lead          BuyerLead?
+}
+
+// ── BuyerLead: captured demand. No consent, no lead. ──
+
+model BuyerLead {
+  id                       String   @id @default(cuid())
+  agentId                  String
+  agent                    Agent    @relation(fields: [agentId], references: [id])
+  consentId                String   @unique
+  consent                  Consent  @relation(fields: [consentId], references: [id])
+
+  // contact — present only because consent exists
+  firstName                String?
+  lastName                 String?
+  email                    String?
+  phone                    String?
+
+  // criteria
+  priceBandMinCents        BigInt?
+  priceBandMaxCents        BigInt?
+  targetGeographies        String[] // zips
+  minBeds                  Int?
+  minBaths                 Float?
+  propertyType             String?
+  mustHaves                Json?
+
+  // readiness
+  affordabilityResultCents BigInt?
+  mortgageReadinessAnswers Json?
+  timelineMonths           Int?
+  readinessScore           Int      @default(0) // 0–100
+  readinessVelocity        Float    @default(0)
+
+  source                   String   // which widget/tool
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+
+  matches                  Match[]
+  outcomes                 Outcome[]
+
+  @@index([agentId, createdAt])
+  @@index([readinessScore])
+}
+
+// ── Match: the money object. Joins demand to supply. ──
+
+model Match {
+  id          String      @id @default(cuid())
+  agentId     String
+  agent       Agent       @relation(fields: [agentId], references: [id])
+  buyerLeadId String
+  buyerLead   BuyerLead   @relation(fields: [buyerLeadId], references: [id])
+  propertyId  String
+  property    Property    @relation(fields: [propertyId], references: [id])
+
+  matchScore  Float       // criteriaFit × listLikelihood × buyerReadiness
+  factors     Json        // Factor[] — why this pairing surfaced
+  status      MatchStatus @default(SURFACED)
+
+  surfacedAt  DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@unique([buyerLeadId, propertyId])
+  @@index([agentId, status, matchScore])
+}
+
+// ── Outcome: confirmed transaction. Closes the training loop. ──
+
+model Outcome {
+  id                     String       @id @default(cuid())
+  propertyId             String
+  property               Property     @relation(fields: [propertyId], references: [id])
+
+  soldAt                 DateTime
+  salePriceCents         BigInt
+  source                 String       // county recorder / MLS
+
+  viaTrackedBuyer        Boolean      @default(false)
+  trackedBuyerLeadId     String?
+  trackedBuyerLead       BuyerLead?   @relation(fields: [trackedBuyerLeadId], references: [id])
+
+  predictedSellerScoreId String?      // which prediction this validates/refutes
+  predictedSellerScore   SellerScore? @relation(fields: [predictedSellerScoreId], references: [id])
+
+  createdAt              DateTime     @default(now())
+
+  @@index([propertyId, soldAt])
+}
