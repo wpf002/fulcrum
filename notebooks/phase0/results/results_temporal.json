@@ -1,0 +1,11 @@
+{
+  "n_train": 330700,
+  "n_temporal": 342986,
+  "temporal_base_rate": 0.03038316432740695,
+  "temporal_precision_at_top_decile": 0.06058662312671293,
+  "temporal_lift_at_top_decile": 1.9940853583858327,
+  "temporal_precision_at_top_1pct": 0.13764946048410615,
+  "temporal_lift_at_top_1pct": 4.530451766011096,
+  "temporal_roc_auc": 0.5891434608514301,
+  "temporal_pr_auc": 0.05238617653687436
+}
