@@ -49,7 +49,14 @@ const COURT_RE = /pending in the\s+(.+?County (?:Probate )?Court(?:\s*(?:No\.?|N
 const TYPE_RE = /(Letters Testamentary|Letters of Administration|Small Estate Affidavit|Determination of Heirship|Muniment of Title)/i;
 
 export function parseCreditorNotice(text: string): ProbateFiling | null {
-  const decedent = text.match(DECEDENT_RE)?.[1]?.replace(/\s+/g, " ").trim();
+  const raw = text.match(DECEDENT_RE)?.[1];
+  // newspaper columns hyphenate words across line breaks ("ROB- ERT" →
+  // "ROBERT"); a hyphen FOLLOWED BY a space between letters is a wrap artifact,
+  // whereas real hyphenated names have no space ("Smith-Jones").
+  const decedent = raw
+    ?.replace(/([A-Za-z])-\s+([A-Za-z])/g, "$1$2")
+    .replace(/\s+/g, " ")
+    .trim();
   if (!decedent) return null;
   const cause = text.match(CAUSE_RE)?.[1] ?? "";
   const issued = text.match(ISSUED_RE)?.[1];

@@ -8,6 +8,7 @@
     "load:scores": "tsx src/load-scores.ts",
     "load:outcomes": "tsx src/load-outcomes.ts",
     "ingest:probate": "tsx src/probate-ingest.ts",
+    "fetch:notices": "tsx src/probate/fetch-notices.ts",
     "match": "tsx src/match-engine.ts",
     "typecheck": "tsc --noEmit"
   },
@@ -19,6 +20,7 @@
   "devDependencies": {
     "tsx": "^4.16.0",
     "typescript": "^5.5.0",
-    "@types/node": "^22.0.0"
+    "@types/node": "^22.0.0",
+    "playwright": "^1.47.0"
   }
 }

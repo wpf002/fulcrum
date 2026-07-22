@@ -36,17 +36,24 @@ public access is the site's purpose. `public-notice.ts` parses that notice prose
 into filings.
 
 Fetch note: the site's search is ASP.NET WebForms that renders results via an
-async postback, so a raw HTTP client can't reliably drive it (`--live-notices`
-is best-effort). The **reliable, still-free** path is a scheduled **headless
-browser** (Playwright) — or a human — running the Travis + "Letters Testamentary"
-search and saving the results page, then:
+async postback, so a raw HTTP client can't reliably drive it. The reliable,
+still-free path is the bundled **Playwright** fetch (`fetch-notices.ts`) — a
+headless browser that runs the search, paginates, and saves the results page:
 
 ```bash
+# one-time: install the browser
+cd packages/ingest && npx playwright install chromium
+
+# fetch real Travis probate notices → results HTML (free), then ingest
+pnpm --filter @fulcrum/ingest fetch:notices ./notices.html --months 3
 ML_SERVICE_URL=http://localhost:8010 REDIS_URL=redis://localhost:6380 \
-  pnpm --filter @fulcrum/ingest ingest:probate --notices-file ./results.html
+  pnpm --filter @fulcrum/ingest ingest:probate --notices-file ./notices.html
 ```
 
-Respect the site's Terms of Use; keep any automated fetch polite (low rate).
+Verified live: pulls real Travis decedents (cause numbers like
+`C-1-PB-26-001065`), matches the ones that own Travis homes, quarantines the
+rest. Respect the site's Terms of Use; the fetch runs once, slowly, on a
+schedule (keep it polite).
 
 ## Run
 
