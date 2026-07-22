@@ -1,13 +1,6 @@
 import { Sidebar } from "./sidebar";
 import { SellerBoard, type ScoredProperty } from "./seller-board";
-
-const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3011";
-
-interface AgentRow {
-  id: string;
-  name: string;
-  territories: { zips?: string[] };
-}
+import { apiGet, getMe } from "../lib/api";
 
 interface Stats {
   total: number;
@@ -19,14 +12,11 @@ interface Stats {
 export const dynamic = "force-dynamic";
 
 async function getData() {
-  const agents: AgentRow[] = await fetch(`${API}/v1/agents`, { cache: "no-store" }).then((r) => r.json());
-  const agent = agents[0];
-  const zips = agent?.territories?.zips ?? [];
-  const [properties, stats]: [ScoredProperty[], Stats] = await Promise.all([
-    zips.length
-      ? fetch(`${API}/v1/properties?zips=${zips.join(",")}&limit=500`, { cache: "no-store" }).then((r) => r.json())
-      : Promise.resolve([]),
-    fetch(`${API}/v1/properties/stats`, { cache: "no-store" }).then((r) => r.json()),
+  const agent = await getMe();
+  const zips = agent.territories?.zips ?? [];
+  const [properties, stats] = await Promise.all([
+    apiGet<ScoredProperty[]>("/v1/me/properties?limit=500"),
+    apiGet<Stats>("/v1/properties/stats"),
   ]);
   return { agent, zips, properties, stats };
 }
@@ -37,7 +27,7 @@ export default async function Home() {
 
   return (
     <div className="app">
-      <Sidebar active="sellers" />
+      <Sidebar active="sellers" agentName={agent.name} />
 
       <main className="main">
         <header className="appbar">

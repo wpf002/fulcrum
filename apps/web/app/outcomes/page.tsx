@@ -1,6 +1,5 @@
 import { Sidebar } from "../sidebar";
-
-const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3011";
+import { apiGet } from "../../lib/api";
 
 interface TrackRecord {
   track: {
@@ -44,7 +43,7 @@ interface TrackRecord {
 export const dynamic = "force-dynamic";
 
 async function getData(): Promise<TrackRecord> {
-  return fetch(`${API}/v1/model/track-record`, { cache: "no-store" }).then((r) => r.json());
+  return apiGet<TrackRecord>("/v1/model/track-record");
 }
 
 function titleCase(s: string): string {

@@ -6,7 +6,7 @@ const ML = process.env.ML_SERVICE_URL ?? "http://localhost:8000";
 export function registerOutcomeRoutes(app: FastifyInstance) {
   // Model Track Record: aggregate accuracy + retrain decision from the ml
   // service, joined with the confirmed outcomes recorded in the database.
-  app.get("/v1/model/track-record", async (_req, reply) => {
+  app.get("/v1/model/track-record", { preHandler: [app.authenticate] }, async (_req, reply) => {
     let track: unknown = null;
     let latestRetrain: unknown = null;
     try {

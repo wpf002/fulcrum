@@ -1,12 +1,6 @@
 import { Sidebar } from "../sidebar";
 import { MatchesBoard, type Match } from "../matches-board";
-
-const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3011";
-
-interface AgentRow {
-  id: string;
-  name: string;
-}
+import { apiGet, getMe } from "../../lib/api";
 
 interface Summary {
   surfaced: number;
@@ -17,14 +11,11 @@ interface Summary {
 export const dynamic = "force-dynamic";
 
 async function getData() {
-  const agents: AgentRow[] = await fetch(`${API}/v1/agents`, { cache: "no-store" }).then((r) => r.json());
-  const agent = agents[0];
-  const [matches, summary]: [Match[], Summary] = agent
-    ? await Promise.all([
-        fetch(`${API}/v1/agents/${agent.id}/matches`, { cache: "no-store" }).then((r) => r.json()),
-        fetch(`${API}/v1/agents/${agent.id}/matches/summary`, { cache: "no-store" }).then((r) => r.json()),
-      ])
-    : [[], { surfaced: 0, buyers: 0, properties: 0 }];
+  const [agent, matches, summary] = await Promise.all([
+    getMe(),
+    apiGet<Match[]>("/v1/me/matches"),
+    apiGet<Summary>("/v1/me/matches/summary"),
+  ]);
   return { agent, matches, summary };
 }
 
@@ -34,7 +25,7 @@ export default async function Matches() {
 
   return (
     <div className="app">
-      <Sidebar active="matches" />
+      <Sidebar active="matches" agentName={agent.name} />
 
       <main className="main">
         <header className="appbar">

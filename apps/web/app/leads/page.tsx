@@ -1,11 +1,5 @@
 import { Sidebar } from "../sidebar";
-
-const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3011";
-
-interface AgentRow {
-  id: string;
-  name: string;
-}
+import { apiGet, getMe } from "../../lib/api";
 
 interface Consent {
   termsVersion: string;
@@ -36,11 +30,7 @@ interface Lead {
 export const dynamic = "force-dynamic";
 
 async function getData() {
-  const agents: AgentRow[] = await fetch(`${API}/v1/agents`, { cache: "no-store" }).then((r) => r.json());
-  const agent = agents[0];
-  const leads: Lead[] = agent
-    ? await fetch(`${API}/v1/agents/${agent.id}/leads`, { cache: "no-store" }).then((r) => r.json())
-    : [];
+  const [agent, leads] = await Promise.all([getMe(), apiGet<Lead[]>("/v1/me/leads")]);
   return { agent, leads };
 }
 
@@ -85,7 +75,7 @@ export default async function Leads() {
 
   return (
     <div className="app">
-      <Sidebar active="leads" />
+      <Sidebar active="leads" agentName={agent.name} />
 
       <main className="main">
         <header className="appbar">
@@ -184,7 +174,12 @@ export default async function Leads() {
             {leads.length === 0 && (
               <div className="empty">
                 No leads yet. Embed the buyer widget on your site — open{" "}
-                <a href={`${API}/widget/demo`} style={{ color: "var(--accent)" }}>the demo landing page</a>{" "}
+                <a
+                  href={`${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3011"}/widget/demo`}
+                  style={{ color: "var(--accent)" }}
+                >
+                  the demo landing page
+                </a>{" "}
                 and complete it to see one land here.
               </div>
             )}

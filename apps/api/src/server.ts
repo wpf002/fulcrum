@@ -1,6 +1,8 @@
 import "./env.js";
 import Fastify from "fastify";
 import cors from "@fastify/cors";
+import { registerAuth } from "./auth.js";
+import { registerAuthRoutes } from "./routes/auth.js";
 import { registerLeadRoutes } from "./routes/leads.js";
 import { registerPropertyRoutes } from "./routes/properties.js";
 import { registerWidgetRoutes } from "./routes/widget.js";
@@ -13,8 +15,12 @@ const app = Fastify({ logger: true });
 // leads cross-origin. These endpoints are intentionally public.
 await app.register(cors, { origin: true, methods: ["GET", "POST"] });
 
+// JWT + the `authenticate` preHandler (agent auth / multi-tenancy).
+await registerAuth(app);
+
 app.get("/health", async () => ({ ok: true, service: "fulcrum-api" }));
 
+registerAuthRoutes(app);
 registerLeadRoutes(app);
 registerPropertyRoutes(app);
 registerWidgetRoutes(app);
@@ -27,3 +33,5 @@ app
     app.log.error(err);
     process.exit(1);
   });
+
+export { app };

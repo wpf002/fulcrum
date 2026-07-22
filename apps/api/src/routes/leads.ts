@@ -104,8 +104,9 @@ export function registerLeadRoutes(app: FastifyInstance) {
     return reply.code(201).send({ id: lead.id, readinessScore });
   });
 
-  app.get("/v1/agents/:agentId/leads", async (req, reply) => {
-    const { agentId } = req.params as { agentId: string };
+  // Lead inbox for the authenticated agent (their own consented leads only).
+  app.get("/v1/me/leads", { preHandler: [app.authenticate] }, async (req, reply) => {
+    const agentId = req.agentId;
     const leads = await prisma.buyerLead.findMany({
       where: { agentId },
       orderBy: { createdAt: "desc" },

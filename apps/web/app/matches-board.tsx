@@ -2,8 +2,6 @@
 
 import { useMemo, useState } from "react";
 
-const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3011";
-
 interface Factor {
   label: string;
   weight: number;
@@ -74,7 +72,7 @@ export function MatchesBoard({ matches: initial }: { matches: Match[] }) {
   async function setStatus(id: string, status: Match["status"]) {
     setMatches((ms) => ms.map((m) => (m.id === id ? { ...m, status } : m)));
     try {
-      await fetch(`${API}/v1/matches/${id}/status`, {
+      await fetch(`/api/matches/${id}/status`, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ status }),

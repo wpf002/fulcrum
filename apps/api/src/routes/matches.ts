@@ -3,10 +3,12 @@ import { z } from "zod";
 import { prisma, MatchStatus } from "@fulcrum/db";
 
 export function registerMatchRoutes(app: FastifyInstance) {
-  // Ranked matches for an agent, with the buyer + property context the agent
-  // needs to act ("3 buyers want X · these likely-to-list homes match").
-  app.get("/v1/agents/:agentId/matches", async (req, reply) => {
-    const { agentId } = req.params as { agentId: string };
+  const auth = { preHandler: [app.authenticate] };
+
+  // Ranked matches for the authenticated agent, with the buyer + property
+  // context they need to act ("3 buyers want X · these likely-to-list homes").
+  app.get("/v1/me/matches", auth, async (req, reply) => {
+    const agentId = req.agentId;
     const { status } = req.query as { status?: string };
 
     const matches = await prisma.match.findMany({
@@ -62,8 +64,8 @@ export function registerMatchRoutes(app: FastifyInstance) {
   });
 
   // Summary counts for the match dashboard header.
-  app.get("/v1/agents/:agentId/matches/summary", async (req) => {
-    const { agentId } = req.params as { agentId: string };
+  app.get("/v1/me/matches/summary", auth, async (req) => {
+    const agentId = req.agentId;
     const [surfaced, buyers, properties] = await Promise.all([
       prisma.match.count({ where: { agentId, status: "SURFACED" } }),
       prisma.match.findMany({ where: { agentId }, select: { buyerLeadId: true }, distinct: ["buyerLeadId"] }),
@@ -77,14 +79,16 @@ export function registerMatchRoutes(app: FastifyInstance) {
   });
 
   // Agent acts on a match — the status lifecycle the match layer tracks.
-  app.post("/v1/matches/:id/status", async (req, reply) => {
+  // Ownership-enforced: only the match's own agent may update it.
+  app.post("/v1/matches/:id/status", auth, async (req, reply) => {
     const { id } = req.params as { id: string };
     const parsed = statusSchema.safeParse(req.body);
     if (!parsed.success) return reply.code(400).send({ error: parsed.error.flatten() });
-    const updated = await prisma.match.update({
-      where: { id },
+    const result = await prisma.match.updateMany({
+      where: { id, agentId: req.agentId },
       data: { status: parsed.data.status as MatchStatus },
     });
-    return reply.send({ id: updated.id, status: updated.status });
+    if (result.count === 0) return reply.code(404).send({ error: "match not found" });
+    return reply.send({ id, status: parsed.data.status });
   });
 }

@@ -145,6 +145,7 @@ model Agent {
   id               String      @id @default(cuid())
   name             String
   email            String      @unique
+  passwordHash     String?     // scrypt hash; null only for legacy/seed rows
   brandConfig      Json?       // logo, colors for embedded widgets
   subscriptionTier String      @default("trial")
   territories      Json        // zips + optional polygons defining supply scope
