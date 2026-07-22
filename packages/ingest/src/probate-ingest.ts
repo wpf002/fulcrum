@@ -23,6 +23,7 @@ import { redis } from "./redis.js";
 import type { ProbateFiling, ProbateSource } from "./probate/types.js";
 import { uniCourtSource } from "./probate/sources/unicourt.js";
 import { exportFileSource } from "./probate/sources/export-file.js";
+import { publicNoticeFromFile, publicNoticeLive } from "./probate/sources/public-notice.js";
 import { matchDecedentToProperty } from "./probate/match.js";
 
 const STREAM = "score.requests";
@@ -34,6 +35,16 @@ function arg(name: string): string | undefined {
 }
 
 function selectSource(): ProbateSource {
+  // free: Texas public "Notice to Creditors" — a saved results page, or live
+  const notices = arg("--notices-file");
+  if (notices) {
+    console.log(`source: texaspublicnotices results page ${notices} (free)`);
+    return publicNoticeFromFile(notices);
+  }
+  if (process.argv.includes("--live-notices")) {
+    console.log("source: texaspublicnotices.com live search (free; brittle — prefer a saved page)");
+    return publicNoticeLive();
+  }
   const uni = uniCourtSource();
   if (uni) {
     console.log("source: UniCourt LDaaS (UNICOURT_API_KEY set)");
@@ -45,7 +56,11 @@ function selectSource(): ProbateSource {
     return exportFileSource(file);
   }
   throw new Error(
-    "no probate source configured — set UNICOURT_API_KEY or pass --file <export.csv|json>.\n" +
+    "no probate source configured. Free options:\n" +
+      "  --notices-file <saved texaspublicnotices results.html>   (recommended, free)\n" +
+      "  --live-notices                                           (free, brittle WebForms)\n" +
+      "  --file <export.csv|json>                                 (re:SearchTX/bulk export)\n" +
+      "  UNICOURT_API_KEY=…                                       (licensed API)\n" +
       "(We do not scrape the reCAPTCHA-protected Odyssey portal; see probate/README.md.)",
   );
 }
