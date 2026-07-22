@@ -245,6 +245,11 @@ body {
 
 .addr-cell { min-width: 0; }
 .addr { font-weight: 600; font-size: 14.5px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vel {
+  display: inline-block; margin-left: 8px; font-family: var(--font-mono);
+  font-size: 10.5px; font-weight: 500; color: #ab3f27; background: var(--up-bg);
+  border-radius: 5px; padding: 1px 6px; vertical-align: middle; letter-spacing: 0.02em;
+}
 .addr-sub { font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 .pill { display: inline-flex; align-items: center; padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 500; letter-spacing: 0.01em; }

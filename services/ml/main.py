@@ -1,78 +1,167 @@
 """fulcrum-ml: seller model + match scorer.
 
-Contract (see packages/types/src/index.ts):
-  POST /score/seller -> P(list within N months) + Factor[] provenance
-  POST /score/match  -> criteriaFit x listLikelihood x buyerReadiness
-  POST /train/seller -> LightGBM retrain; ships only if precision@top-decile
-                        beats the incumbent model on the holdout (kill criteria).
+Serves the LightGBM seller model behind FastAPI. /score/seller reads a
+property and its events from Postgres, scores it with the base model, layers
+explainable event priors (probate, pre-foreclosure, ...), and returns a
+probability, a 0–100 score, and Factor[] provenance. The caller persists the
+SellerScore (keeps a single Prisma writer + cuid ids).
 """
 
-from fastapi import FastAPI
+import json
+import math
+import os
+from datetime import datetime, timezone
+from pathlib import Path
+
+import lightgbm as lgb
+import numpy as np
+import pandas as pd
+import psycopg
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+
+from features import (
+    CATEGORICAL_FEATURES,
+    FEATURES,
+    NUMERIC_FEATURES,
+    apply_event_priors,
+    property_to_features,
+)
+
+MODELS = Path(__file__).parent / "models"
+DB_URL = (
+    os.environ.get("DATABASE_URL")
+    or "postgresql://fulcrum:fulcrum@localhost:5437/fulcrum"
+).replace("postgresql://", "postgresql://")
 
 app = FastAPI(title="fulcrum-ml")
 
-MODEL_VERSION = "0.0.0-stub"
+_booster = lgb.Booster(model_file=str(MODELS / "seller_serving.txt"))
+_meta = json.loads((MODELS / "feature_meta.json").read_text())
+_zip_categories = _meta["zip_categories"]
+MODEL_VERSION = _meta["model_version"]
 
 
-class Factor(BaseModel):
-    label: str
-    weight: float
-    direction: str  # "up" | "down"
+def _humanize(feat: str, value, contrib: float) -> str:
+    up = contrib > 0
+    if feat == "tenure_months" and not math.isnan(value):
+        return f"Ownership tenure {value / 12:.0f} yrs"
+    if feat == "log_market_value" and not math.isnan(value):
+        return f"Market value ~${math.expm1(value) / 1000:.0f}k"
+    if feat == "entity_owner":
+        return "Entity-owned (LLC/trust)" if value == 1 else "Individually owned"
+    if feat == "absentee":
+        return "Absentee owner" if value == 1 else "Owner-occupied"
+    if feat == "situs_zip5":
+        return f"Zip {value}"
+    return feat
+
+
+def _model_score(prop: dict):
+    """Base probability + factors from the serving LightGBM model."""
+    feats = property_to_features(prop)
+    row = {f: feats[f] for f in NUMERIC_FEATURES}
+    df = pd.DataFrame([row])
+    df["situs_zip5"] = pd.Categorical([feats["situs_zip5"]], categories=_zip_categories)
+    df = df[FEATURES]
+
+    base_p = float(_booster.predict(df)[0])
+    contribs = _booster.predict(df, pred_contrib=True)[0][:-1]  # drop bias
+    factors = []
+    for i, feat in enumerate(FEATURES):
+        c = float(contribs[i])
+        if abs(c) < 1e-4:
+            continue
+        factors.append(
+            {
+                "label": _humanize(feat, feats[feat], c),
+                "weight": round(abs(c), 4),
+                "direction": "up" if c > 0 else "down",
+            }
+        )
+    factors.sort(key=lambda f: -f["weight"])
+    return base_p, factors
+
+
+def _score_property(prop: dict, events: list[dict], prior_prob, prior_factors) -> dict:
+    # Base signal: the property's current best estimate. Where a score already
+    # exists (the richer Phase 0 model, loaded in Phase 1) we layer events onto
+    # that and keep its explanations; otherwise we cold-score with the serving
+    # LightGBM. Either way events are explainable priors on top.
+    if prior_prob is not None:
+        base_p = float(prior_prob)
+        base_factors = list(prior_factors or [])
+        base_version = "phase0-2022t2024-lgbm-v1"
+    else:
+        base_p, base_factors = _model_score(prop)
+        base_version = MODEL_VERSION
+
+    final_p, event_factors = apply_event_priors(base_p, events)
+    # fresh event signal first, then the base explanations
+    factors = (event_factors + base_factors)[:5]
+
+    return {
+        "probability": round(final_p, 6),
+        "base_probability": round(base_p, 6),
+        "score": int(round(final_p * 100)),
+        "velocity": round((final_p - base_p) * 100, 2),  # event-driven delta
+        "factors": factors,
+        "modelVersion": f"{base_version}+events" if event_factors else base_version,
+    }
 
 
 class SellerScoreRequest(BaseModel):
     propertyId: str
 
 
-class SellerScoreResponse(BaseModel):
-    propertyId: str
-    probabilityListMonths: float
-    score: int
-    velocity: float
-    factors: list[Factor]
-    modelVersion: str
-
-
-class MatchScoreRequest(BaseModel):
-    buyerLeadId: str
-    propertyId: str
-
-
-class MatchScoreResponse(BaseModel):
-    buyerLeadId: str
-    propertyId: str
-    matchScore: float
-    factors: list[Factor]
-
-
 @app.get("/health")
 def health():
-    return {"ok": True, "service": "fulcrum-ml", "modelVersion": MODEL_VERSION}
+    return {
+        "ok": True,
+        "service": "fulcrum-ml",
+        "modelVersion": MODEL_VERSION,
+        "holdoutLift": _meta.get("holdout_lift"),
+    }
 
 
-@app.post("/score/seller", response_model=SellerScoreResponse)
+@app.post("/score/seller")
 def score_seller(req: SellerScoreRequest):
-    # Stub until the Phase-0 notebook model is ported here (Phase 3).
-    # Real implementation pulls PropertyEvent features from Postgres and
-    # runs the versioned LightGBM model.
-    return SellerScoreResponse(
-        propertyId=req.propertyId,
-        probabilityListMonths=0.0,
-        score=0,
-        velocity=0.0,
-        factors=[Factor(label="stub model — no signal", weight=0.0, direction="down")],
-        modelVersion=MODEL_VERSION,
-    )
+    with psycopg.connect(DB_URL) as conn:
+        prop_row = conn.execute(
+            """SELECT id, "ownershipTenureMonths", "ownerType",
+                      "avmEstimateCents", "assessedValueCents", zip
+               FROM "Property" WHERE id = %s""",
+            (req.propertyId,),
+        ).fetchone()
+        if not prop_row:
+            raise HTTPException(status_code=404, detail="unknown property")
+        prop = {
+            "id": prop_row[0],
+            "ownershipTenureMonths": prop_row[1],
+            "ownerType": prop_row[2],
+            "avmEstimateCents": prop_row[3],
+            "assessedValueCents": prop_row[4],
+            "zip": prop_row[5],
+        }
+        event_rows = conn.execute(
+            'SELECT type, "occurredAt" FROM "PropertyEvent" WHERE "propertyId" = %s',
+            (req.propertyId,),
+        ).fetchall()
+        prior = conn.execute(
+            '''SELECT "probabilityListMonths", factors FROM "SellerScore"
+               WHERE "propertyId" = %s ORDER BY "computedAt" DESC LIMIT 1''',
+            (req.propertyId,),
+        ).fetchone()
+    events = [{"type": r[0], "occurredAt": r[1]} for r in event_rows]
+    prior_prob = prior[0] if prior else None
+    prior_factors = prior[1] if prior else None
+
+    result = _score_property(prop, events, prior_prob, prior_factors)
+    result["propertyId"] = req.propertyId
+    return result
 
 
-@app.post("/score/match", response_model=MatchScoreResponse)
-def score_match(req: MatchScoreRequest):
-    # matchScore = criteriaFit(geo, price, beds/baths/type)
-    #            x listLikelihood x buyerReadiness   (Phase 4)
-    return MatchScoreResponse(
-        buyerLeadId=req.buyerLeadId,
-        propertyId=req.propertyId,
-        matchScore=0.0,
-        factors=[Factor(label="stub model — no signal", weight=0.0, direction="down")],
-    )
+@app.post("/score/match")
+def score_match():
+    # Phase 4: criteriaFit x listLikelihood x buyerReadiness
+    return {"error": "not implemented until Phase 4"}

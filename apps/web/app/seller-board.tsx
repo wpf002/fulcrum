@@ -19,6 +19,7 @@ export interface ScoredProperty {
   avmEstimateCents: string | null;
   score: number;
   probabilityListMonths: number;
+  velocity: number;
   factors: Factor[];
   modelVersion: string;
 }
@@ -90,7 +91,7 @@ function cleanLabel(label: string): string {
 }
 
 type OwnerKey = "ALL" | "OWNER_OCCUPIED" | "ABSENTEE" | "ENTITY";
-type SortKey = "score" | "value" | "tenure";
+type SortKey = "score" | "value" | "tenure" | "velocity";
 
 const FILTERS: { key: OwnerKey; label: string }[] = [
   { key: "ALL", label: "All" },
@@ -103,6 +104,7 @@ const SORTS: { key: SortKey; label: string }[] = [
   { key: "score", label: "List likelihood" },
   { key: "value", label: "Est. value" },
   { key: "tenure", label: "Tenure" },
+  { key: "velocity", label: "Recently moved" },
 ];
 
 const VISIBLE = 80; // keep the rendered list snappy; filters narrow from the full set
@@ -128,6 +130,7 @@ export function SellerBoard({ properties }: { properties: ScoredProperty[] }) {
         return Number(BigInt(b.avmEstimateCents ?? "0") - BigInt(a.avmEstimateCents ?? "0"));
       if (sort === "tenure")
         return (b.ownershipTenureMonths ?? -1) - (a.ownershipTenureMonths ?? -1);
+      if (sort === "velocity") return (b.velocity ?? 0) - (a.velocity ?? 0);
       return b.probabilityListMonths - a.probabilityListMonths;
     });
     return out;
@@ -215,7 +218,12 @@ export function SellerBoard({ properties }: { properties: ScoredProperty[] }) {
               </div>
 
               <div className="addr-cell">
-                <div className="addr">{titleCase(p.addressLine1)}</div>
+                <div className="addr">
+                  {titleCase(p.addressLine1)}
+                  {p.velocity >= 1 && (
+                    <span className="vel" title="score jump from a new event">▲ +{Math.round(p.velocity)}</span>
+                  )}
+                </div>
                 <div className="addr-sub">{p.ownerName ? titleCase(p.ownerName) : "Owner unknown"}</div>
               </div>
 

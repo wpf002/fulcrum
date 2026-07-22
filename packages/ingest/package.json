@@ -5,11 +5,13 @@
   "scripts": {
     "ingest:travis": "tsx src/tcad-travis.ts",
     "load:scores": "tsx src/load-scores.ts",
+    "ingest:probate": "tsx src/probate-travis.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@fulcrum/db": "workspace:*",
-    "@fulcrum/types": "workspace:*"
+    "@fulcrum/types": "workspace:*",
+    "ioredis": "^5.4.0"
   },
   "devDependencies": {
     "tsx": "^4.16.0",
