@@ -1,0 +1,16 @@
+{
+  "models": [
+    {
+      "version": "seller-serving-v3-202607",
+      "trained_at": "2026-07-22",
+      "training_rows": 570790,
+      "new_outcomes_folded_in": 240090,
+      "holdout_base_rate": 0.0304,
+      "incumbent_p10": 0.0561,
+      "candidate_p10": 0.0634,
+      "candidate_lift": 2.09,
+      "shipped": true,
+      "vs_incumbent": "seller-serving-v2"
+    }
+  ]
+}

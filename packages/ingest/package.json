@@ -5,6 +5,7 @@
   "scripts": {
     "ingest:travis": "tsx src/tcad-travis.ts",
     "load:scores": "tsx src/load-scores.ts",
+    "load:outcomes": "tsx src/load-outcomes.ts",
     "ingest:probate": "tsx src/probate-travis.ts",
     "match": "tsx src/match-engine.ts",
     "typecheck": "tsc --noEmit"

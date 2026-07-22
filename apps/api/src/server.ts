@@ -5,6 +5,7 @@ import { registerLeadRoutes } from "./routes/leads.js";
 import { registerPropertyRoutes } from "./routes/properties.js";
 import { registerWidgetRoutes } from "./routes/widget.js";
 import { registerMatchRoutes } from "./routes/matches.js";
+import { registerOutcomeRoutes } from "./routes/outcomes.js";
 
 const app = Fastify({ logger: true });
 
@@ -18,6 +19,7 @@ registerLeadRoutes(app);
 registerPropertyRoutes(app);
 registerWidgetRoutes(app);
 registerMatchRoutes(app);
+registerOutcomeRoutes(app);
 
 app
   .listen({ port: Number(process.env.PORT ?? 3011), host: "0.0.0.0" })

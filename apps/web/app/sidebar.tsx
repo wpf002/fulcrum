@@ -52,7 +52,7 @@ const NAV: { key: NavKey; label: string; href?: string; soon?: boolean; icon: Re
   {
     key: "outcomes",
     label: "Outcomes",
-    soon: true,
+    href: "/outcomes",
     icon: <><path d="M3 3v18h18" /><path d="m7 14 3-4 3 3 4-6" /></>,
   },
 ];

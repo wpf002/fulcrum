@@ -167,6 +167,20 @@ class MatchRequest(BaseModel):
     propertyIds: list[str]
 
 
+@app.get("/model/track-record")
+def track_record():
+    """Aggregate model track record + the latest retrain decision."""
+    tr_path = MODELS / "track_record.json"
+    reg_path = MODELS / "registry.json"
+    track = json.loads(tr_path.read_text()) if tr_path.exists() else {}
+    latest_retrain = None
+    if reg_path.exists():
+        reg = json.loads(reg_path.read_text())
+        if reg.get("models"):
+            latest_retrain = reg["models"][-1]
+    return {"track": track, "latestRetrain": latest_retrain}
+
+
 @app.post("/score/match")
 def score_match(req: MatchRequest):
     """Score a buyer lead against candidate properties. Returns ranked pairs."""

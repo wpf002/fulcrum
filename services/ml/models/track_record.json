@@ -1,0 +1,29 @@
+{
+  "model_version": "seller-serving-v2",
+  "evaluated_window": "2024-08 \u2192 2025-07 (Travis County farm)",
+  "n_predictions": 53330,
+  "n_confirmed_sales": 1732,
+  "base_rate": 0.0325,
+  "precision_at_top_decile": 0.0654,
+  "lift_at_top_decile": 2.02,
+  "avg_days_to_sale": 135,
+  "median_days_to_sale": 135,
+  "top_predictive_factors": [
+    {
+      "factor": "Ownership tenure",
+      "importance": 70925.5
+    },
+    {
+      "factor": "Market value",
+      "importance": 54670.4
+    },
+    {
+      "factor": "Neighborhood (zip)",
+      "importance": 35654.2
+    },
+    {
+      "factor": "Entity ownership",
+      "importance": 14890.5
+    }
+  ]
+}

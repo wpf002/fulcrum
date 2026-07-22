@@ -331,7 +331,34 @@ body {
 .status-tag.contacted { background: var(--accent-soft); color: var(--accent-ink); }
 .status-tag.converted { background: var(--up-bg); color: var(--up-fg); }
 
+/* ── model track record (outcomes) ── */
+.tr-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 14px; margin-bottom: 24px; }
+.tr-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px; box-shadow: var(--shadow-tile); }
+.tr-card.retrain { border-color: var(--accent); }
+.tr-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.tr-head h2 { font-family: var(--font-display); font-optical-sizing: auto; font-weight: 600; font-size: 16px; margin: 0; color: var(--ink); }
+.ship-tag { font-family: var(--font-mono); font-size: 10.5px; font-weight: 500; letter-spacing: 0.05em; padding: 3px 9px; border-radius: 6px; }
+.ship-tag.ship { background: var(--accent-soft); color: var(--accent-ink); }
+.ship-tag.hold { background: var(--down-bg); color: var(--muted); }
+.tr-note { font-size: 12px; color: var(--muted); margin: 0 0 16px; line-height: 1.5; }
+.retrain-compare { display: flex; align-items: center; gap: 18px; }
+.rc-col { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+.rc-lab { font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--faint); }
+.rc-num { font-family: var(--font-display); font-optical-sizing: auto; font-weight: 600; font-size: 30px; letter-spacing: -0.01em; color: var(--muted); font-variant-numeric: tabular-nums; }
+.rc-col.win .rc-num { color: var(--accent); }
+.rc-ver { font-family: var(--font-mono); font-size: 10.5px; color: var(--faint); }
+.rc-arrow { font-size: 22px; color: var(--faint); }
+
+.factor-bars { display: flex; flex-direction: column; gap: 10px; }
+.fbar { display: grid; grid-template-columns: 150px 1fr; align-items: center; gap: 12px; }
+.fbar-label { font-size: 12.5px; color: var(--ink-soft); }
+.fbar-track { height: 8px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 5px; overflow: hidden; }
+.fbar-fill { display: block; height: 100%; background: var(--accent); border-radius: 5px; }
+
+.outcome-head, .outcome-row { grid-template-columns: 110px minmax(200px, 1.6fr) 110px 130px 160px; }
+
 .empty { background: var(--surface); border: 1px dashed var(--border-strong); border-radius: 12px; padding: 40px; text-align: center; color: var(--muted); }
+@media (max-width: 860px) { .tr-grid { grid-template-columns: 1fr; } }
 .foot { margin: 22px 2px 0; font-family: var(--font-mono); font-size: 11px; color: var(--faint); line-height: 1.6; max-width: 720px; }
 .foot .accent { color: var(--accent); }
 
