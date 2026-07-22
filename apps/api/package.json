@@ -1,6 +1,7 @@
 {
   "name": "@fulcrum/api",
   "version": "0.0.0",
+  "type": "module",
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
@@ -8,8 +9,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@fastify/cors": "^9.0.1",
     "@fulcrum/db": "workspace:*",
     "@fulcrum/types": "workspace:*",
+    "@fulcrum/widget": "workspace:*",
     "fastify": "^4.28.0",
     "ioredis": "^5.4.0",
     "zod": "^3.23.0"

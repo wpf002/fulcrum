@@ -37,7 +37,7 @@ export default async function Home() {
 
   return (
     <div className="app">
-      <Sidebar />
+      <Sidebar active="sellers" />
 
       <main className="main">
         <header className="appbar">

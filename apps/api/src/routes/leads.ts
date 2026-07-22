@@ -93,14 +93,13 @@ export function registerLeadRoutes(app: FastifyInstance) {
       });
     });
 
-    await redis.xadd(
-      STREAM_BUYER_LEADS,
-      "*",
-      "leadId",
-      lead.id,
-      "agentId",
-      agent.id
-    );
+    // The lead is already persisted; a Redis hiccup must not drop it. Publish
+    // best-effort for the match layer (Phase 4) and log on failure.
+    try {
+      await redis.xadd(STREAM_BUYER_LEADS, "*", "leadId", lead.id, "agentId", agent.id);
+    } catch (err) {
+      req.log.warn({ err, leadId: lead.id }, "failed to publish buyer.leads stream");
+    }
 
     return reply.code(201).send({ id: lead.id, readinessScore });
   });
@@ -111,14 +110,33 @@ export function registerLeadRoutes(app: FastifyInstance) {
       where: { agentId },
       orderBy: { createdAt: "desc" },
       take: 100,
+      include: { consent: true },
     });
     return reply.send(
       leads.map((l) => ({
-        ...l,
+        id: l.id,
+        firstName: l.firstName,
+        lastName: l.lastName,
+        email: l.email,
+        phone: l.phone,
         priceBandMinCents: l.priceBandMinCents?.toString() ?? null,
         priceBandMaxCents: l.priceBandMaxCents?.toString() ?? null,
+        targetGeographies: l.targetGeographies,
+        minBeds: l.minBeds,
+        propertyType: l.propertyType,
         affordabilityResultCents: l.affordabilityResultCents?.toString() ?? null,
-      }))
+        mortgageReadinessAnswers: l.mortgageReadinessAnswers,
+        timelineMonths: l.timelineMonths,
+        readinessScore: l.readinessScore,
+        source: l.source,
+        createdAt: l.createdAt,
+        consent: {
+          termsVersion: l.consent.termsVersion,
+          capturedAt: l.consent.capturedAt,
+          channelOptIns: l.consent.channelOptIns,
+          toolSource: l.consent.toolSource,
+        },
+      })),
     );
   });
 }

@@ -1,8 +1,17 @@
 {
   "name": "@fulcrum/widget",
   "version": "0.0.0",
-  "main": "src/index.ts",
+  "main": "dist/fulcrum-widget.js",
+  "scripts": {
+    "build": "esbuild src/index.ts --bundle --format=iife --target=es2019 --minify --outfile=dist/fulcrum-widget.js",
+    "dev": "esbuild src/index.ts --bundle --format=iife --target=es2019 --outfile=dist/fulcrum-widget.js --watch",
+    "typecheck": "tsc --noEmit"
+  },
   "dependencies": {
     "@fulcrum/types": "workspace:*"
+  },
+  "devDependencies": {
+    "esbuild": "^0.23.0",
+    "typescript": "^5.5.0"
   }
 }

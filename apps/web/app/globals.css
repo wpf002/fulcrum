@@ -262,6 +262,20 @@ body {
 .chip.down { background: var(--down-bg); color: var(--down-fg); }
 .chip .arrow { font-size: 9px; }
 
+/* ── buyer leads inbox ── */
+.leads-head, .lead-row {
+  grid-template-columns: 92px minmax(180px, 1.3fr) minmax(150px, 1fr) minmax(200px, 1.1fr) 120px;
+}
+.lead-budget { min-width: 0; }
+.consent-cell { display: flex; flex-wrap: wrap; gap: 5px; }
+.ch {
+  font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.02em;
+  padding: 3px 8px; border-radius: 6px; background: var(--down-bg); color: var(--faint);
+  border: 1px solid transparent;
+}
+.ch.on { background: var(--accent-soft); color: var(--accent-ink); }
+.ch.flag { background: var(--absentee-bg); color: var(--absentee-fg); }
+
 .empty { background: var(--surface); border: 1px dashed var(--border-strong); border-radius: 12px; padding: 40px; text-align: center; color: var(--muted); }
 .foot { margin: 22px 2px 0; font-family: var(--font-mono); font-size: 11px; color: var(--faint); line-height: 1.6; max-width: 720px; }
 .foot .accent { color: var(--accent); }

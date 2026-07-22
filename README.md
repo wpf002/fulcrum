@@ -35,6 +35,20 @@ apps/web · apps/api · services/ml · packages/{db,types,widget,config,ingest}
 5. `pnpm dev`  (web :3000, api :3001)
 6. `cd services/ml && uvicorn main:app --reload`  (ml :8000)
 
+## Buyer funnel (Phase 2)
+```bash
+pnpm --filter @fulcrum/widget build          # bundle the embeddable widget
+# then, with api running, open the demo agent landing page:
+#   http://localhost:3011/widget/demo
+# complete it → a consented BuyerLead lands in the dashboard at /leads
+```
+Agents embed it on their own site:
+```html
+<div id="fulcrum-widget"></div>
+<script src="https://api.fulcrum.example/widget/fulcrum-widget.js"
+        data-fulcrum-agent="AGENT_ID"></script>
+```
+
 ## Travis County ingest (Phase 1)
 ```bash
 # download the current TCAD certified export (see notebooks/phase0/README.md)
