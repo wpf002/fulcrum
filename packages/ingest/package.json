@@ -7,7 +7,7 @@
     "ingest:travis": "tsx src/ingest-cli.ts travis",
     "load:scores": "tsx src/load-scores.ts",
     "load:outcomes": "tsx src/load-outcomes.ts",
-    "ingest:probate": "tsx src/probate-travis.ts",
+    "ingest:probate": "tsx src/probate-ingest.ts",
     "match": "tsx src/match-engine.ts",
     "typecheck": "tsc --noEmit"
   },

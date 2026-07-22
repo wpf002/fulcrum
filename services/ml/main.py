@@ -98,8 +98,11 @@ def _score_property(prop: dict, events: list[dict], prior_prob, prior_factors) -
         base_version = MODEL_VERSION
 
     final_p, event_factors = apply_event_priors(base_p, events)
-    # fresh event signal first, then the base explanations
-    factors = (event_factors + base_factors)[:5]
+    # fresh event signal first, then base explanations — de-duped by label so a
+    # stale base factor never repeats a fresh event factor
+    seen = {f["label"] for f in event_factors}
+    merged = event_factors + [f for f in base_factors if f["label"] not in seen]
+    factors = merged[:5]
 
     return {
         "probability": round(final_p, 6),
@@ -148,9 +151,13 @@ def score_seller(req: SellerScoreRequest):
             'SELECT type, "occurredAt" FROM "PropertyEvent" WHERE "propertyId" = %s',
             (req.propertyId,),
         ).fetchall()
+        # Base must be an EVENT-FREE score, never an already-boosted one —
+        # otherwise re-running a rescore double-counts the event. Prefer the
+        # latest score whose model version isn't an "+events" variant.
         prior = conn.execute(
             '''SELECT "probabilityListMonths", factors FROM "SellerScore"
-               WHERE "propertyId" = %s ORDER BY "computedAt" DESC LIMIT 1''',
+               WHERE "propertyId" = %s AND "modelVersion" NOT LIKE '%%+events'
+               ORDER BY "computedAt" DESC LIMIT 1''',
             (req.propertyId,),
         ).fetchone()
     events = [{"type": r[0], "occurredAt": r[1]} for r in event_rows]
