@@ -64,6 +64,39 @@ export function registerPropertyRoutes(app: FastifyInstance) {
     );
   });
 
+  // Single property + its latest score + events (used by the MCP fulcrum_score
+  // tool and integrations).
+  app.get("/v1/properties/:id", async (req, reply) => {
+    const { id } = req.params as { id: string };
+    const p = await prisma.property.findUnique({
+      where: { id },
+      include: {
+        sellerScores: { orderBy: { computedAt: "desc" }, take: 1 },
+        events: { select: { type: true, occurredAt: true }, orderBy: { occurredAt: "desc" }, take: 20 },
+      },
+    });
+    if (!p) return reply.code(404).send({ error: "unknown property" });
+    const s = p.sellerScores[0];
+    return reply.send({
+      id: p.id,
+      address: p.addressLine1,
+      city: p.city,
+      state: p.state,
+      zip: p.zip,
+      ownerName: p.ownerName,
+      ownerType: p.ownerType,
+      ownershipTenureMonths: p.ownershipTenureMonths,
+      avmEstimateCents: p.avmEstimateCents?.toString() ?? null,
+      resolutionStatus: p.resolutionStatus,
+      score: s ? Math.round(s.probabilityListMonths * 100) : null,
+      probabilityListMonths: s?.probabilityListMonths ?? null,
+      velocity: s?.velocity ?? null,
+      factors: s?.factors ?? [],
+      modelVersion: s?.modelVersion ?? null,
+      events: p.events.map((e) => ({ type: e.type, occurredAt: e.occurredAt })),
+    });
+  });
+
   app.get("/v1/properties/stats", async () => {
     const [total, resolved, quarantined, scored] = await Promise.all([
       prisma.property.count(),

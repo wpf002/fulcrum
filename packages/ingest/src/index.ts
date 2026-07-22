@@ -2,11 +2,11 @@
 // feed, MLS/IDX where licensed, court records for the niche.
 //
 // Workers:
-//  - tcad-travis.ts  — Travis County TCAD appraisal export -> Property +
-//    SALE PropertyEvents, with (fips, apn) identity resolution and
-//    quarantine (missing/duplicate apn, unusable situs address).
-//  - load-scores.ts  — Phase 0 model scores (NDJSON) -> SellerScore rows
-//    with Factor[] provenance.
+//  - ingest-cli.ts   — county-dispatch appraisal ingest (see counties/). Any
+//    metro is a registry entry; same-format counties reuse one reader.
+//  - load-scores.ts  — Phase 0 model scores (NDJSON) -> SellerScore rows.
+//  - probate-travis.ts — probate event feed + rescore-on-event pipeline.
+//  - match-engine.ts / load-outcomes.ts — Phase 4 / Phase 5 workers.
 //
 // Rules:
 //  - Every PropertyEvent must carry source provenance.

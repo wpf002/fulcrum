@@ -3,7 +3,8 @@
   "version": "0.0.0",
   "main": "src/index.ts",
   "scripts": {
-    "ingest:travis": "tsx src/tcad-travis.ts",
+    "ingest": "tsx src/ingest-cli.ts",
+    "ingest:travis": "tsx src/ingest-cli.ts travis",
     "load:scores": "tsx src/load-scores.ts",
     "load:outcomes": "tsx src/load-outcomes.ts",
     "ingest:probate": "tsx src/probate-travis.ts",

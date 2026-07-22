@@ -49,13 +49,29 @@ Agents embed it on their own site:
         data-fulcrum-agent="AGENT_ID"></script>
 ```
 
-## Travis County ingest (Phase 1)
+## County ingest (Phase 1, templatized in Phase 6)
 ```bash
-# download the current TCAD certified export (see notebooks/phase0/README.md)
-pnpm --filter @fulcrum/ingest ingest:travis <export.zip> PROP.TXT
+pnpm --filter @fulcrum/ingest ingest --list            # registered counties
+pnpm --filter @fulcrum/ingest ingest travis <export.zip>   # any metro is a registry entry
 # score with the Phase 0 model (notebooks/phase0/score_current.py), then:
 pnpm --filter @fulcrum/ingest load:scores <scores.ndjson.gz>
 ```
+Adding a same-format (PACS) county is a config entry in
+`packages/ingest/src/counties/registry.ts`; a new vendor format is a sibling
+reader next to `counties/pacs.ts`.
+
+## Scale & integrations (Phase 6)
+- **`@fulcrum/client`** — typed API client other projects/tools consume.
+- **MCP tools** — plug Fulcrum into agent workflows (Claude, Cursor):
+  ```bash
+  FULCRUM_API_URL=http://localhost:3011 pnpm --filter @fulcrum/mcp start
+  ```
+  exposes `fulcrum_score`, `fulcrum_match`, `fulcrum_track_record`.
+- **Follow Up Boss** — push matched buyers + door-knock notes to the CRM:
+  ```bash
+  FULCRUM_API_URL=http://localhost:3011 pnpm --filter @fulcrum/integrations sync:fub <agentId>
+  # dry-run unless FUB_API_KEY is set
+  ```
 
 ## Roadmap
 See FULCRUM_BUILD_PLAN.md. Phase 0 (ground-truth proof) is the gate —
