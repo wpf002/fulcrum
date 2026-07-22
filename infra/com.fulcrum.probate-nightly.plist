@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  launchd nightly probate refresh. Install:
+    cp infra/com.fulcrum.probate-nightly.plist ~/Library/LaunchAgents/
+    launchctl load -w ~/Library/LaunchAgents/com.fulcrum.probate-nightly.plist
+  Runs infra/nightly-probate.sh at 03:15 daily (launchd catches up if asleep).
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.fulcrum.probate-nightly</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>/Users/willfoti/Documents/GitHub/fulcrum/infra/nightly-probate.sh</string>
+  </array>
+
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key><integer>3</integer>
+    <key>Minute</key><integer>15</integer>
+  </dict>
+
+  <key>RunAtLoad</key>
+  <false/>
+
+  <key>StandardOutPath</key>
+  <string>/Users/willfoti/.fulcrum/logs/launchd.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/willfoti/.fulcrum/logs/launchd.err.log</string>
+</dict>
+</plist>
