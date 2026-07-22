@@ -27,6 +27,7 @@ from features import (
     apply_event_priors,
     property_to_features,
 )
+from matching import score_pair
 
 MODELS = Path(__file__).parent / "models"
 DB_URL = (
@@ -161,7 +162,62 @@ def score_seller(req: SellerScoreRequest):
     return result
 
 
+class MatchRequest(BaseModel):
+    buyerLeadId: str
+    propertyIds: list[str]
+
+
 @app.post("/score/match")
-def score_match():
-    # Phase 4: criteriaFit x listLikelihood x buyerReadiness
-    return {"error": "not implemented until Phase 4"}
+def score_match(req: MatchRequest):
+    """Score a buyer lead against candidate properties. Returns ranked pairs."""
+    if not req.propertyIds:
+        return {"buyerLeadId": req.buyerLeadId, "matches": []}
+
+    with psycopg.connect(DB_URL) as conn:
+        lead_row = conn.execute(
+            '''SELECT id, "priceBandMinCents", "priceBandMaxCents",
+                      "targetGeographies", "minBeds", "readinessScore"
+               FROM "BuyerLead" WHERE id = %s''',
+            (req.buyerLeadId,),
+        ).fetchone()
+        if not lead_row:
+            raise HTTPException(status_code=404, detail="unknown buyer lead")
+        lead = {
+            "id": lead_row[0],
+            "priceBandMinCents": lead_row[1],
+            "priceBandMaxCents": lead_row[2],
+            "targetGeographies": lead_row[3],
+            "minBeds": lead_row[4],
+            "readinessScore": lead_row[5],
+        }
+
+        # candidate properties + their latest seller-score probability
+        rows = conn.execute(
+            '''SELECT p.id, p.zip, p."avmEstimateCents", p."addressLine1",
+                      p."ownerType", s."probabilityListMonths"
+               FROM "Property" p
+               JOIN LATERAL (
+                 SELECT "probabilityListMonths" FROM "SellerScore" s
+                 WHERE s."propertyId" = p.id
+                 ORDER BY s."computedAt" DESC LIMIT 1
+               ) s ON true
+               WHERE p.id = ANY(%s)''',
+            (req.propertyIds,),
+        ).fetchall()
+
+    matches = []
+    for r in rows:
+        prop = {
+            "id": r[0],
+            "zip": r[1],
+            "avmEstimateCents": r[2],
+            "addressLine1": r[3],
+            "ownerType": r[4],
+            "listLikelihood": float(r[5]) if r[5] is not None else 0.0,
+        }
+        scored = score_pair(lead, prop)
+        if scored:
+            matches.append(scored)
+
+    matches.sort(key=lambda m: -m["matchScore"])
+    return {"buyerLeadId": req.buyerLeadId, "matches": matches}

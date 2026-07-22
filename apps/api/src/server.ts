@@ -4,6 +4,7 @@ import cors from "@fastify/cors";
 import { registerLeadRoutes } from "./routes/leads.js";
 import { registerPropertyRoutes } from "./routes/properties.js";
 import { registerWidgetRoutes } from "./routes/widget.js";
+import { registerMatchRoutes } from "./routes/matches.js";
 
 const app = Fastify({ logger: true });
 
@@ -16,6 +17,7 @@ app.get("/health", async () => ({ ok: true, service: "fulcrum-api" }));
 registerLeadRoutes(app);
 registerPropertyRoutes(app);
 registerWidgetRoutes(app);
+registerMatchRoutes(app);
 
 app
   .listen({ port: Number(process.env.PORT ?? 3011), host: "0.0.0.0" })
