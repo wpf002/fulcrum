@@ -10,3 +10,5 @@ __pycache__
 .venv
 models/*.txt
 models/*.bin
+*.tsbuildinfo
+.claude/settings.local.json

@@ -1,12 +1,16 @@
-// Seller-side ingestion workers (Phase 1+): county assessor/recorder,
-// property-data feed, MLS/IDX where licensed, court records for the niche.
+// Seller-side ingestion workers: county assessor/recorder, property-data
+// feed, MLS/IDX where licensed, court records for the niche.
+//
+// Workers:
+//  - tcad-travis.ts  — Travis County TCAD appraisal export -> Property +
+//    SALE PropertyEvents, with (fips, apn) identity resolution and
+//    quarantine (missing/duplicate apn, unusable situs address).
+//  - load-scores.ts  — Phase 0 model scores (NDJSON) -> SellerScore rows
+//    with Factor[] provenance.
 //
 // Rules:
-//  - Normalize addresses, then identity-resolve: deterministic join on
-//    (fips, apn) where a parcel id exists; probabilistic fallback on
-//    normalized address + ownerName with a confidence threshold. Below
-//    threshold -> Property.resolutionStatus = QUARANTINED, never surfaced.
 //  - Every PropertyEvent must carry source provenance.
-//  - On new events, enqueue affected propertyIds for ML rescoring.
+//  - Quarantined records are stored but never surfaced.
+//  - On new events, enqueue affected propertyIds for ML rescoring (Phase 3).
 
-export {};
+export { PROP_FIELDS, parseLine } from "./layout.js";

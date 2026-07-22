@@ -2,8 +2,18 @@
   "name": "@fulcrum/ingest",
   "version": "0.0.0",
   "main": "src/index.ts",
+  "scripts": {
+    "ingest:travis": "tsx src/tcad-travis.ts",
+    "load:scores": "tsx src/load-scores.ts",
+    "typecheck": "tsc --noEmit"
+  },
   "dependencies": {
     "@fulcrum/db": "workspace:*",
     "@fulcrum/types": "workspace:*"
+  },
+  "devDependencies": {
+    "tsx": "^4.16.0",
+    "typescript": "^5.5.0",
+    "@types/node": "^22.0.0"
   }
 }

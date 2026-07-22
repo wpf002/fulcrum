@@ -99,3 +99,15 @@ python train.py dataset.parquet results/results.json
 python build_dataset.py extracted dataset_temporal.parquet temporal2024
 python temporal_check.py dataset.parquet dataset_temporal.parquet results/results_temporal.json
 ```
+
+## Phase 1 handoff
+
+`score_current.py` trains on the gate pair and scores the current
+(2025-07-20) snapshot with per-property `Factor[]` provenance
+(LightGBM pred_contrib), emitting NDJSON that
+`packages/ingest/src/load-scores.ts` loads into `SellerScore` rows:
+
+```bash
+python build_dataset.py extracted dataset_score2025.parquet score2025
+python score_current.py dataset.parquet dataset_score2025.parquet scores_2025.ndjson.gz
+```

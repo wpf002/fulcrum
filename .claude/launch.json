@@ -1,0 +1,25 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "fulcrum-api",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--filter",
+        "@fulcrum/api",
+        "dev"
+      ],
+      "port": 3011
+    },
+    {
+      "name": "fulcrum-web",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--filter",
+        "@fulcrum/web",
+        "dev"
+      ],
+      "port": 3010
+    }
+  ]
+}

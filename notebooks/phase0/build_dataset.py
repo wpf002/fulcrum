@@ -51,6 +51,16 @@ PAIRS = {
         snapshot=datetime(2024, 8, 21),
         label_end=datetime(2025, 7, 20),
     ),
+    # current-snapshot scoring (no labels exist yet — label column is all
+    # zeros and must be ignored; this build exists to produce features).
+    "score2025": dict(
+        feat="prop_2025.csv.gz",
+        prior="prop_2024.csv.gz",
+        label="prop_2025.csv.gz",
+        impdet="impdet_2025.csv.gz",
+        snapshot=datetime(2025, 7, 20),
+        label_end=datetime(2025, 7, 21),
+    ),
 }
 
 ENTITY_RE = re.compile(
