@@ -38,7 +38,8 @@ const CSS = `
 .fx-consent{border-top:1px solid var(--fx-line);margin-top:6px;padding-top:12px;display:flex;flex-direction:column;gap:9px}
 .fx-consent label{display:flex;gap:9px;align-items:flex-start;font-size:12.5px;color:var(--fx-ink);line-height:1.4;cursor:pointer}
 .fx-consent input{margin-top:2px;accent-color:var(--fx-accent)}
-.fx-terms{font-size:11px;color:var(--fx-muted);margin:4px 0 0}
+.fx-terms{font-size:11px;color:var(--fx-muted);margin:6px 0 0;line-height:1.5}
+.fx-terms a{color:var(--fx-accent);text-decoration:underline}
 .fx-row{display:flex;gap:10px;margin-top:6px}
 .fx-next{flex:1;background:var(--fx-accent);color:#fff;border:0;border-radius:10px;padding:12px;font-size:14.5px;
   font-weight:600;font-family:inherit;cursor:pointer}

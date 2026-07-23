@@ -3,9 +3,12 @@ import { apiGet, getMe } from "../../lib/api";
 
 interface Consent {
   termsVersion: string;
+  termsHash: string | null;
   capturedAt: string;
   channelOptIns: { email: boolean; sms: boolean; tcpa: boolean };
   toolSource: string;
+  ip: string | null;
+  userAgent: string | null;
 }
 
 interface Lead {
@@ -165,7 +168,19 @@ export default async function Leads() {
 
                   <div className="metrics">
                     <div className="metric-val">{ago(l.createdAt)}</div>
-                    <div className="metric-lab">terms v{l.consent.termsVersion}</div>
+                    <div
+                      className="metric-lab"
+                      title={
+                        `Consent receipt\nterms ${l.consent.termsVersion}` +
+                        `\nsha256 ${l.consent.termsHash ?? "—"}` +
+                        `\ncaptured ${new Date(l.consent.capturedAt).toISOString()}` +
+                        `\nip ${l.consent.ip ?? "—"}` +
+                        `\nua ${l.consent.userAgent ?? "—"}`
+                      }
+                    >
+                      terms v{l.consent.termsVersion}
+                      {l.consent.termsHash && ` · ${l.consent.termsHash.slice(0, 8)}`}
+                    </div>
                   </div>
                 </article>
               );

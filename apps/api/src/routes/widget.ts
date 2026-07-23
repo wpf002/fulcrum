@@ -2,6 +2,7 @@ import type { FastifyInstance } from "fastify";
 import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { prisma } from "@fulcrum/db";
+import { CURRENT_TERMS_VERSION, getTerms } from "../legal.js";
 
 const require = createRequire(import.meta.url);
 
@@ -25,8 +26,31 @@ export function registerWidgetRoutes(app: FastifyInstance) {
       agentName: agent.name,
       primaryColor: (brand.primaryColor as string) ?? "#1f5a46",
       logoUrl: (brand.logoUrl as string) ?? null,
-      termsVersion: "2026-07-buyer-v1",
+      termsVersion: CURRENT_TERMS_VERSION,
+      termsUrl: "/v1/legal/terms",
     });
+  });
+
+  // The exact disclosure text (+ its hash) a consumer is shown. Public: the
+  // widget links to it, and it's what Consent.termsHash pins.
+  app.get("/v1/legal/terms", async (req, reply) => {
+    const { version } = req.query as { version?: string };
+    try {
+      const doc = getTerms(version ?? CURRENT_TERMS_VERSION);
+      const wantsHtml = (req.headers.accept ?? "").includes("text/html");
+      if (!wantsHtml) return reply.send(doc);
+      return reply
+        .header("content-type", "text/html; charset=utf-8")
+        .send(
+          `<!doctype html><meta charset="utf-8"><title>Terms — ${doc.version}</title>` +
+            `<style>body{font:15px/1.6 system-ui,sans-serif;max-width:44rem;margin:3rem auto;padding:0 1rem;color:#14202b}` +
+            `pre{white-space:pre-wrap;font:inherit}code{font-size:11px;color:#5f6f7e}</style>` +
+            `<pre>${doc.text.replace(/[<>&]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;" })[c]!)}</pre>` +
+            `<p><code>version ${doc.version} · sha256 ${doc.hash}</code></p>`,
+        );
+    } catch {
+      return reply.code(404).send({ error: "unknown terms version" });
+    }
   });
 
   // Standalone embeddable bundle. Long-cache in prod; no-cache in dev.

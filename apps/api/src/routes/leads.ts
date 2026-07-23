@@ -4,6 +4,7 @@ import { prisma } from "@fulcrum/db";
 import { STREAM_BUYER_LEADS } from "@fulcrum/types";
 import { redis } from "../redis.js";
 import { computeReadinessScore } from "../readiness.js";
+import { CURRENT_TERMS_VERSION, getTerms, termsHashFor } from "../legal.js";
 
 const submissionSchema = z.object({
   agentId: z.string().min(1),
@@ -60,9 +61,13 @@ export function registerLeadRoutes(app: FastifyInstance) {
     const readinessScore = computeReadinessScore(body.readiness);
 
     const lead = await prisma.$transaction(async (tx) => {
+      // Consent receipt: record exactly what was shown (version + content
+      // hash) and the capture context, so it can be proven later.
       const consent = await tx.consent.create({
         data: {
           termsVersion: body.consent.termsVersion,
+          termsHash: termsHashFor(body.consent.termsVersion),
+          userAgent: req.headers["user-agent"]?.slice(0, 512) ?? null,
           ip: req.ip,
           toolSource: body.source,
           channelOptIns: body.consent.channelOptIns,
@@ -133,9 +138,12 @@ export function registerLeadRoutes(app: FastifyInstance) {
         createdAt: l.createdAt,
         consent: {
           termsVersion: l.consent.termsVersion,
+          termsHash: l.consent.termsHash,
           capturedAt: l.consent.capturedAt,
           channelOptIns: l.consent.channelOptIns,
           toolSource: l.consent.toolSource,
+          ip: l.consent.ip,
+          userAgent: l.consent.userAgent,
         },
       })),
     );

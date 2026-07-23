@@ -104,7 +104,8 @@ class Widget {
     lastName: "",
     email: "",
     phone: "",
-    optEmail: true,
+    // Nothing is pre-checked — every channel is affirmative, unbundled opt-in.
+    optEmail: false,
     optSms: false,
     optTcpa: false,
   };
@@ -264,10 +265,14 @@ class Widget {
           ${this.field("Email", `<input type="email" data-k="email" value="${s.email}" placeholder="you@email.com" />`)}
           ${this.field("Phone (optional)", `<input type="tel" data-k="phone" value="${s.phone}" placeholder="(512) 555-0134" />`)}
           <div class="fx-consent">
-            <label><input type="checkbox" data-k="optEmail" ${s.optEmail ? "checked" : ""} /> Email me matching homes and updates <b>(required)</b></label>
-            <label><input type="checkbox" data-k="optSms" ${s.optSms ? "checked" : ""} /> Text me (SMS)</label>
-            <label><input type="checkbox" data-k="optTcpa" ${s.optTcpa ? "checked" : ""} /> I agree to be contacted by autodialer/prerecorded calls (TCPA)</label>
-            <p class="fx-terms">By continuing you agree to the terms (v${this.cfg.termsVersion}). Your info goes only to ${this.cfg.agentName}.</p>
+            <label><input type="checkbox" data-k="optEmail" ${s.optEmail ? "checked" : ""} /> Email me matching homes and updates from ${this.cfg.agentName}. <b>(required)</b></label>
+            <label><input type="checkbox" data-k="optSms" ${s.optSms ? "checked" : ""} /> Text me (SMS). Message &amp; data rates may apply; reply STOP to stop.</label>
+            <label><input type="checkbox" data-k="optTcpa" ${s.optTcpa ? "checked" : ""} /> I expressly consent to receive calls and/or texts from ${this.cfg.agentName} at the number I provided using an <b>automatic telephone dialing system and/or an artificial or prerecorded voice</b>. This is <b>not a condition of purchase</b>, and I can revoke it at any time.</label>
+            <p class="fx-terms">
+              Each choice above is separate and optional except email. Your info goes only to ${this.cfg.agentName} — never sold.
+              We don't pull your credit or access your bank.
+              <a href="${this.api}/v1/legal/terms" target="_blank" rel="noopener">Terms &amp; privacy</a> (v${this.cfg.termsVersion}).
+            </p>
           </div>
           ${this.error ? `<div class="fx-error">Couldn't submit: ${this.error}. Try again.</div>` : ""}
           <div class="fx-row">

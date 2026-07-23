@@ -162,6 +162,8 @@ model Agent {
 model Consent {
   id            String     @id @default(cuid())
   termsVersion  String     // versioned so you can prove what a user saw
+  termsHash     String?    // sha256 of the exact disclosure text served
+  userAgent     String?    // captured for the consent receipt / audit trail
   capturedAt    DateTime   @default(now())
   ip            String
   toolSource    String     // which widget/tool captured it
