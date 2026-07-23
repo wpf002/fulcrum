@@ -9,11 +9,15 @@
     "typecheck": "turbo typecheck",
     "db:generate": "pnpm --filter @fulcrum/db generate",
     "db:migrate": "pnpm --filter @fulcrum/db migrate",
-    "db:seed": "pnpm --filter @fulcrum/db seed"
+    "db:seed": "pnpm --filter @fulcrum/db seed",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ml": "cd services/ml && .venv/bin/python -m pytest tests -q"
   },
   "devDependencies": {
+    "@types/node": "^22.0.0",
     "turbo": "^2.1.0",
     "typescript": "^5.5.0",
-    "@types/node": "^22.0.0"
+    "vitest": "^2.1.0"
   }
 }
