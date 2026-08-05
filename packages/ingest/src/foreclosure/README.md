@@ -40,14 +40,19 @@ notices, not foreclosures.) That aggregator is also off limits on Terms-of-Use
 grounds — see `../probate/README.md`.
 
 The authoritative source is the **Travis County Clerk's Recording Division**,
-which files/records/maintains Notice of Trustee Sales and offers a public
-records search. Options:
+which files/records/maintains Notice of Trustee Sales. Access options, with
+what was actually verified:
 
-1. **County Clerk records** — the recorded trustee-sale notices (public records
-   search / bulk records subscription).
-2. **A licensed vendor feed** — several sell structured TX trustee-sale data.
+| Path | Automatable? | Cost | Notes |
+|---|---|---|---|
+| **tccsearch.org** (Clerk's public records search) | ❌ **No** | free | `robots.txt` has `User-agent: ClaudeBot → Disallow: /` **and** a catch-all `User-agent: * → Disallow: /`. Crawling is disallowed; the UI is for human lookup. |
+| **Clerk bulk/subscription data** | ✅ likely | $ (ask) | Not documented publicly — **call the Recording Division, 512-854-9188 opt 7**. Many TX clerks sell bulk recorded-document data; this is the cleanest authorized programmatic path. |
+| **Licensed vendor** (TexasFile, foreclosure-data vendors) | ✅ yes | $$ | Sells structured TX trustee-sale records. |
+| **Monthly manual pull** | n/a (human) | free | Texas foreclosure auctions are the **first Tuesday of each month**, so notices arrive in a monthly batch — a person runs the search, saves the notices, and drops the file into `foreclosure:ingest`. Legitimate (intended human use of the portal) and only ~once a month. |
 
-Both deliver notice text/records that `foreclosure-ingest.ts --file` parses.
+The **monthly manual pull** is the practical zero-cost path today; a clerk bulk
+subscription is the upgrade when volume justifies it. Every option feeds the
+same `--file` ingest, so switching is a one-line change.
 
 ## Run
 
