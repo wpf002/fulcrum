@@ -18,16 +18,14 @@
  *   (or set UNICOURT_API_KEY to pull from UniCourt LDaaS)
  */
 
-import { prisma, PropertyEventType, Prisma } from "@fulcrum/db";
+import { prisma, PropertyEventType } from "@fulcrum/db";
 import { redis } from "./redis.js";
 import type { ProbateFiling, ProbateSource } from "./probate/types.js";
 import { uniCourtSource } from "./probate/sources/unicourt.js";
 import { exportFileSource } from "./probate/sources/export-file.js";
 import { publicNoticeFromFile, publicNoticeLive } from "./probate/sources/public-notice.js";
 import { matchDecedentToProperty } from "./probate/match.js";
-
-const STREAM = "score.requests";
-const ML = process.env.ML_SERVICE_URL ?? "http://localhost:8000";
+import { SCORE_STREAM, drainAndRescore } from "./events/rescore.js";
 
 function arg(name: string): string | undefined {
   const i = process.argv.indexOf(name);
@@ -63,15 +61,6 @@ function selectSource(): ProbateSource {
       "  UNICOURT_API_KEY=…                                       (licensed API)\n" +
       "(We do not scrape the reCAPTCHA-protected Odyssey portal; see probate/README.md.)",
   );
-}
-
-interface ScoreResult {
-  probability: number;
-  base_probability: number;
-  score: number;
-  velocity: number;
-  factors: Prisma.InputJsonValue;
-  modelVersion: string;
 }
 
 async function main() {
@@ -114,7 +103,7 @@ async function main() {
     stats.events++;
     if (!affected.has(match.propertyId)) {
       affected.add(match.propertyId);
-      await redis.xadd(STREAM, "*", "propertyId", match.propertyId, "reason", "PROBATE");
+      await redis.xadd(SCORE_STREAM, "*", "propertyId", match.propertyId, "reason", "PROBATE");
       stats.enqueued++;
     }
     console.log(
@@ -127,36 +116,7 @@ async function main() {
   );
 
   // 3 ── drain the queue: rescore via ml, write refreshed SellerScore ──
-  const pending = await redis.xrange(STREAM, "-", "+");
-  let rescored = 0;
-  for (const [entryId, fields] of pending) {
-    const idx = fields.indexOf("propertyId");
-    const propertyId = idx > -1 ? fields[idx + 1] : null;
-    if (!propertyId) continue;
-    const res = await fetch(`${ML}/score/seller`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ propertyId }),
-    });
-    if (!res.ok) {
-      console.warn(`  score failed for ${propertyId}: ${res.status}`);
-      continue;
-    }
-    const r = (await res.json()) as ScoreResult;
-    await prisma.sellerScore.create({
-      data: {
-        propertyId,
-        probabilityListMonths: r.probability,
-        score: r.score,
-        velocity: r.velocity,
-        factors: r.factors,
-        modelVersion: r.modelVersion,
-      },
-    });
-    await redis.xdel(STREAM, entryId);
-    rescored++;
-    console.log(`  rescored ${propertyId}: score ${r.score} (+${r.velocity}) ${r.modelVersion}`);
-  }
+  const rescored = await drainAndRescore();
 
   console.log(`\ndone: ${stats.events} events from ${source.name}, ${rescored} rescored`);
   await redis.quit();

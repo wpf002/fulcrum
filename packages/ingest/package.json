@@ -9,6 +9,8 @@
     "load:outcomes": "tsx src/load-outcomes.ts",
     "ingest:probate": "tsx src/probate-ingest.ts",
     "fetch:notices": "tsx src/probate/fetch-notices.ts",
+    "foreclosure:ingest": "tsx src/foreclosure-ingest.ts",
+    "fetch:foreclosures": "tsx src/foreclosure/fetch-foreclosures.ts",
     "match": "tsx src/match-engine.ts",
     "typecheck": "tsc --noEmit"
   },
