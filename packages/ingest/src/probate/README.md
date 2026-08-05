@@ -1,70 +1,41 @@
-# Travis County probate ingest
+# Travis County probate ingest (PROBATE events)
 
-Real-source wiring for the probate event feed (replaces the earlier synthesized
-feed). A filing names a decedent; we resolve that decedent to the Travis
+A probate filing names a decedent; we resolve that decedent to the Travis
 property they owned and, for confident matches only, write a `PROBATE`
 PropertyEvent that triggers a rescore.
 
-## Access reality (why there's no live scraper)
+## ⚠️ Source restrictions (read first)
 
-There is **no free, unauthenticated feed** of Travis County probate filings:
+Two sources are **off limits**, both verified directly:
 
-- **Odyssey portal** (`odysseyweb.traviscountytx.gov/Portal/`) — the SmartSearch
-  is **reCAPTCHA**-gated and sits behind an F5 WAF, and Tyler's Terms of Use
-  forbid automated access. We do **not** scrape it (no CAPTCHA bypass).
-- **Docket Search Application** (`publiccourts.traviscountytx.gov/dsa/`) —
-  criminal dockets only, no probate.
+| Source | Why not |
+|---|---|
+| **Odyssey portal** (`odysseyweb.traviscountytx.gov`) | SmartSearch is **reCAPTCHA**-gated behind an F5 WAF; Tyler's Terms forbid automated access. We do not bypass bot protection. |
+| **texaspublicnotices.com** (TX Press Association) | Its Terms of Use prohibit using site content **"in any database, compilation, archive or cache"** and prohibit **"screen scraping … or use of any other automated means to collect information from the site."** Notice detail pages are additionally **challenge-gated**. We do not scrape or ingest it — *even manually saved pages*, since the ToU bars database use of the content. |
 
-## Sources (free first)
+> Note: `robots.txt` on texaspublicnotices allows `/` and the *search* page has
+> no CAPTCHA, which is misleading — the binding restriction is in the Terms of
+> Use and on the detail pages. Checking robots.txt alone is not sufficient.
 
-| Source | Cost | Adapter | Gate |
-|---|---|---|---|
-| **Texas "Notice to Creditors"** (texaspublicnotices.com) | **free** | `sources/public-notice.ts` | `--notices-file <results.html>` or `--live-notices` |
-| re:SearchTX bulk / County Clerk bulk / manual export | free–$ | `sources/export-file.ts` (CSV/JSON) | `--file <path>` |
-| UniCourt LDaaS | $$ (enterprise) | `sources/unicourt.ts` | `UNICOURT_API_KEY` |
+## Authorized sources
 
-All produce the same `ProbateFiling`, so the matcher + pipeline are
-source-agnostic.
+| Source | Adapter | Gate |
+|---|---|---|
+| **UniCourt LDaaS** (recommended) | `sources/unicourt.ts` | `UNICOURT_API_KEY` |
+| re:SearchTX data agreement / County Clerk bulk records / vendor feed | `sources/export-file.ts` (CSV/JSON) | `--file <path>` |
+| Notice prose from any licensed/authorized source | `sources/public-notice.ts` (`probateNoticesFromFile`) | `--notices-file <path>` |
 
-### Free: Texas public notices (recommended to start)
-
-When a Texas estate opens, the executor must **publish a Notice to Creditors**
-naming the decedent, cause number, and court (Estates Code §308.051). The Texas
-Press Association aggregates every county's notices for free at
-**texaspublicnotices.com** — `robots.txt` allows `/`, there's no CAPTCHA, and
-public access is the site's purpose. `public-notice.ts` parses that notice prose
-into filings.
-
-Fetch note: the site's search is ASP.NET WebForms that renders results via an
-async postback, so a raw HTTP client can't reliably drive it. The reliable,
-still-free path is the bundled **Playwright** fetch (`fetch-notices.ts`) — a
-headless browser that runs the search, paginates, and saves the results page:
-
-```bash
-# one-time: install the browser
-cd packages/ingest && npx playwright install chromium
-
-# fetch real Travis probate notices → results HTML (free), then ingest
-pnpm --filter @fulcrum/ingest fetch:notices ./notices.html --months 3
-ML_SERVICE_URL=http://localhost:8010 REDIS_URL=redis://localhost:6380 \
-  pnpm --filter @fulcrum/ingest ingest:probate --notices-file ./notices.html
-```
-
-Verified live: pulls real Travis decedents (cause numbers like
-`C-1-PB-26-001065`), matches the ones that own Travis homes, quarantines the
-rest. Respect the site's Terms of Use; the fetch runs once, slowly, on a
-schedule (keep it polite).
+All produce the same `ProbateFiling`, so the matcher and pipeline are
+source-agnostic — swapping sources is a one-line change.
 
 ## Run
 
 ```bash
-# licensed API
 UNICOURT_API_KEY=… ML_SERVICE_URL=http://localhost:8010 \
   REDIS_URL=redis://localhost:6380 pnpm --filter @fulcrum/ingest ingest:probate
 
-# real export file (re:SearchTX / bulk / notices)
-ML_SERVICE_URL=http://localhost:8010 REDIS_URL=redis://localhost:6380 \
-  pnpm --filter @fulcrum/ingest ingest:probate --file ./probate_export.csv \
+# or a structured export you're authorized to use
+pnpm --filter @fulcrum/ingest ingest:probate --file ./probate_export.csv \
   --since 2025-01-01 --min-confidence 0.5
 ```
 
@@ -76,8 +47,6 @@ require both a surname and a given-name hit, score by token overlap, and
 **quarantine below `--min-confidence`** (default 0.5) — a wrong match is worse
 than a miss. Entity-owned parcels are excluded (probate is an individual event).
 
-## Export format
-
-CSV or JSON with case-insensitive keys:
-`causeNumber, decedentName, filedAt, caseType` (aliases accepted — see
-`export-file.ts`).
+The parser (`sources/public-notice.ts`) turns standardized Notice-to-Creditors
+prose (Estates Code §308.051) into structured filings and is unit-tested; it
+works on any legitimately-obtained copy of that prose.

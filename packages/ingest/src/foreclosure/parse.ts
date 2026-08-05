@@ -54,7 +54,9 @@ export function parseForeclosureNotice(text: string): ForeclosureFiling | null {
     address,
     zip,
     saleDate: parseDate(text.match(SALE_DATE_RE)?.[1]),
-    source: "texaspublicnotices.com",
+    // provenance is set by the caller (county clerk records / licensed vendor);
+    // the parser only knows it read a trustee-sale notice.
+    source: "trustee-sale-notice",
     ref: text.match(/\b(?:TS|T\.?S\.?|File)\s*(?:No\.?|#)?\s*([A-Z0-9-]{5,25})/i)?.[1] ?? null,
   };
 }

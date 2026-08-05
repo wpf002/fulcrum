@@ -33,6 +33,8 @@ async function main() {
   }
   const since = new Date(arg("--since") ?? "2025-01-01");
   const limit = arg("--limit") ? Number(arg("--limit")) : 500;
+  // record where the notices actually came from (county clerk / vendor)
+  const sourceLabel = arg("--source") ?? `file:${file.split("/").pop()}`;
 
   const filings = parseForeclosureNotices(readFileSync(file, "utf8"))
     .filter((f) => !f.saleDate || f.saleDate >= since)
@@ -54,7 +56,7 @@ async function main() {
         propertyId: match.propertyId,
         type: PropertyEventType.NOD_PREFORECLOSURE,
         occurredAt: f.saleDate ?? new Date(),
-        source: f.source,
+        source: sourceLabel,
         sourceRef: f.ref,
         payload: {
           noticeAddress: f.address,
@@ -66,7 +68,7 @@ async function main() {
     });
     stats.events++;
     affected.add(match.propertyId);
-    console.log(`  ${f.address} → ${match.address} (conf ${match.confidence}) [${f.source}]`);
+    console.log(`  ${f.address} → ${match.address} (conf ${match.confidence}) [${sourceLabel}]`);
   }
 
   await enqueueRescore(affected, "NOD_PREFORECLOSURE");

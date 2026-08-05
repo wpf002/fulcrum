@@ -28,29 +28,33 @@ canonicalize both to `<house#> <STREET> <SUFFIX>`:
 - require house number **and** canonical street name to match (zip too when the
   notice carries one) — anything else is **quarantined**, never guessed.
 
+## Where to get the notices
+
+**Not from a newspaper aggregator.** Texas non-judicial foreclosure (Property
+Code §51.002) requires the notice to be *posted at the courthouse, filed with
+the county clerk, and mailed to the debtor* — newspaper publication is **not**
+required. Verified empirically: searching texaspublicnotices.com for
+"Substitute Trustee" with the Travis county filter returns **"No public notices
+found."** (Broader keyword searches there return "Board of Trustees" school
+notices, not foreclosures.) That aggregator is also off limits on Terms-of-Use
+grounds — see `../probate/README.md`.
+
+The authoritative source is the **Travis County Clerk's Recording Division**,
+which files/records/maintains Notice of Trustee Sales and offers a public
+records search. Options:
+
+1. **County Clerk records** — the recorded trustee-sale notices (public records
+   search / bulk records subscription).
+2. **A licensed vendor feed** — several sell structured TX trustee-sale data.
+
+Both deliver notice text/records that `foreclosure-ingest.ts --file` parses.
+
 ## Run
 
 ```bash
-# free fetch (best-effort — see caveat), then ingest
-pnpm --filter @fulcrum/ingest fetch:foreclosures ./foreclosures.html --months 3
 ML_SERVICE_URL=http://localhost:8010 REDIS_URL=redis://localhost:6380 \
-  pnpm --filter @fulcrum/ingest foreclosure:ingest --file ./foreclosures.html
+  pnpm --filter @fulcrum/ingest foreclosure:ingest --file ./trustee_sales.txt \
+  --since 2026-01-01
 ```
 
-## Fetch caveat (honest)
-
-texaspublicnotices.com is free, robots-allowed, and has no CAPTCHA, and the
-**county checkbox** filter works (keyword filtering does **not** — searching
-"Travis County" matches the *person* "Travis L. Smith" in other counties, so
-`fetch-foreclosures.ts` sets the county checkbox `lstCounty_221` directly).
-
-But foreclosure results are **truncated** in the list (`… click 'view' to open
-the full text`) and the property address lives on each notice's detail view,
-which is a dynamic WebForms postback that resists automation. The fetch script
-attempts the click-through best-effort; the **reliable** inputs are:
-
-1. a saved file of notice detail pages (open the results, save the text), or
-2. a licensed foreclosure feed (many vendors sell TX trustee-sale data).
-
-Either way `foreclosure-ingest.ts --file` parses it, and anything without a
-confidently-matched address is quarantined rather than guessed.
+Anything without a confidently-matched address is quarantined, never guessed.

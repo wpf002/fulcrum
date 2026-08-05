@@ -1,19 +1,22 @@
 /**
- * Free probate source — Texas "Notice to Creditors" legal notices.
+ * Parser for Texas "Notice to Creditors" probate notices.
  *
- * When a Texas estate opens, the executor MUST publish a Notice to Creditors
- * naming the decedent, cause number, and court (Estates Code §308.051). The
- * Texas Press Association aggregates every county's notices for free at
- * texaspublicnotices.com — robots.txt allows `/`, there's no CAPTCHA, and
- * public access is the site's whole purpose. This is the zero-cost real source.
+ * When a Texas estate opens, the representative must publish a Notice to
+ * Creditors naming the decedent, cause number, and court (Estates Code
+ * §308.051). This module turns that standardized prose into structured
+ * filings — it is SOURCE-AGNOSTIC and works on any legitimately-obtained copy.
  *
- * Fetch reliability: the search is ASP.NET WebForms that renders results via an
- * async postback, so a raw HTTP client can't reliably drive it. The robust
- * production fetch is a scheduled **headless browser** (Playwright) running the
- * search, OR a human saving the results page. Either way the durable part is
- * the PARSER here, which turns notice prose into structured filings.
+ * ⚠️ NOT texaspublicnotices.com. That aggregator's Terms of Use expressly
+ * prohibit using its content "in any database, compilation, archive or cache"
+ * and prohibit "screen scraping … or use of any other automated means to
+ * collect information from the site", and its notice detail pages are
+ * challenge-gated. We do not scrape it and do not ingest its content.
  *
- * Respect the site's Terms of Use and keep any live fetch polite (low rate).
+ * Use a source you are licensed/authorized to load into a database:
+ *   - UniCourt LDaaS (licensed API) — see ./unicourt.ts
+ *   - a re:SearchTX data agreement, or County Clerk bulk records
+ *   - a vendor probate feed
+ * See ../README.md.
  */
 
 import { readFileSync } from "node:fs";
@@ -95,54 +98,16 @@ export function parseNotices(htmlOrText: string): ProbateFiling[] {
   return out;
 }
 
-/** Parse a saved search-results page (headless-browser output or manual save). */
-export function publicNoticeFromFile(path: string): ProbateSource {
+/**
+ * Parse probate notices from a legitimately-obtained file (licensed feed
+ * export, County Clerk records, vendor delivery). See the module header:
+ * do NOT feed this scraped aggregator content.
+ */
+export function probateNoticesFromFile(path: string): ProbateSource {
   return {
-    name: `texaspublicnotices:${path.split("/").pop()}`,
+    name: `notice-file:${path.split("/").pop()}`,
     async fetchFilings(since, opts = {}) {
       const filings = parseNotices(readFileSync(path, "utf8")).filter((f) => f.filedAt >= since);
-      return opts.limit ? filings.slice(0, opts.limit) : filings;
-    },
-  };
-}
-
-// ── best-effort live search (WebForms; brittle — prefer a headless browser) ──
-const BASE = "https://www.texaspublicnotices.com";
-const TRAVIS_COUNTY_IDX = "221"; // ctl00$ContentPlaceHolder1$as1$lstCounty$221
-const UA =
-  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36";
-
-export function publicNoticeLive(): ProbateSource {
-  return {
-    name: "texaspublicnotices.com (live)",
-    async fetchFilings(since, opts = {}) {
-      const months = Math.max(1, Math.ceil((Date.now() - since.getTime()) / (30 * 86400e3)));
-      const get = await fetch(`${BASE}/Search.aspx`, { headers: { "user-agent": UA }, redirect: "follow" });
-      const sessionUrl = get.url;
-      const html = await get.text();
-      const hv = (id: string) => html.match(new RegExp(`id="${id}"[^>]*value="([^"]*)"`))?.[1] ?? "";
-      const form = new URLSearchParams();
-      form.set("__EVENTTARGET", "");
-      form.set("__EVENTARGUMENT", "");
-      form.set("__VIEWSTATE", hv("__VIEWSTATE"));
-      form.set("__VIEWSTATEGENERATOR", hv("__VIEWSTATEGENERATOR"));
-      form.set("ctl00$ContentPlaceHolder1$as1$txtSearch", "Letters Testamentary Deceased");
-      form.set(`ctl00$ContentPlaceHolder1$as1$lstCounty$${TRAVIS_COUNTY_IDX}`, "on");
-      form.set("ctl00$ContentPlaceHolder1$as1$txtLastNumMonths", String(months));
-      form.set("ctl00$ContentPlaceHolder1$as1$btnGo1", "Search");
-      const res = await fetch(sessionUrl, {
-        method: "POST",
-        headers: { "user-agent": UA, "content-type": "application/x-www-form-urlencoded" },
-        body: form.toString(),
-      });
-      const filings = parseNotices(await res.text()).filter((f) => f.filedAt >= since);
-      if (!filings.length) {
-        throw new Error(
-          "no notices parsed from live search — the WebForms result likely rendered via async " +
-            "postback. Use a headless browser to run the search and pass the saved results HTML " +
-            "to publicNoticeFromFile(), or feed a manual export. See probate/README.md.",
-        );
-      }
       return opts.limit ? filings.slice(0, opts.limit) : filings;
     },
   };
