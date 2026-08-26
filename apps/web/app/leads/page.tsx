@@ -85,36 +85,27 @@ export default async function Leads() {
         <header className="appbar">
           <div className="appbar-titles">
             <h1>Buyer leads</h1>
-            <span className="appbar-sub">{agent ? agent.name : "No agent"} · consented inbound</span>
-          </div>
-          <div className="appbar-meta">
-            <span className="freshness-inline">
-              100% opt-in · every lead carries a <b>consent record</b>
-            </span>
+            <span className="appbar-sub">People who used the tools on your site</span>
           </div>
         </header>
 
         <div className="content">
           <section className="kpis">
             <div className="kpi headline">
-              <div className="kpi-label">Leads captured</div>
+              <div className="kpi-label">Total leads</div>
               <div className="kpi-value">{leads.length}</div>
-              <div className="kpi-sub">first-party, consented</div>
             </div>
             <div className="kpi">
-              <div className="kpi-label">High readiness</div>
+              <div className="kpi-label">Ready to buy</div>
               <div className="kpi-value">{hot}</div>
-              <div className="kpi-sub">score ≥ 60 · call first</div>
             </div>
             <div className="kpi">
-              <div className="kpi-label">SMS-consented</div>
+              <div className="kpi-label">Can text</div>
               <div className="kpi-value">{consentedSms}</div>
-              <div className="kpi-sub">textable per opt-in</div>
             </div>
             <div className="kpi">
               <div className="kpi-label">Source</div>
               <div className="kpi-value" style={{ fontSize: 20 }}>Widget</div>
-              <div className="kpi-sub">affordability tool</div>
             </div>
           </section>
 
@@ -189,22 +180,21 @@ export default async function Leads() {
 
             {leads.length === 0 && (
               <div className="empty">
-                No leads yet. Embed the buyer widget on your site — open{" "}
+                No leads yet. Add the buyer tools to your site — try{" "}
                 <a
                   href={`${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3011"}/widget/demo`}
                   style={{ color: "var(--accent)" }}
                 >
                   the demo landing page
                 </a>{" "}
-                and complete it to see one land here.
+                and fill it out to see a lead appear here.
               </div>
             )}
           </div>
 
           <p className="foot">
-            Every lead is tied to an immutable <span className="accent">consent record</span> (terms version,
-            channel opt-ins, capture time) — no consent, no lead. Readiness is a rules-based score;
-            the ML model comes in a later phase.
+            Every lead includes a record of exactly what they agreed to, when, and how they can be
+            contacted. Readiness is scored from the answers they gave.
           </p>
         </div>
       </main>

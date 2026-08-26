@@ -33,16 +33,11 @@ export default async function Home() {
         <header className="appbar">
           <div className="appbar-titles">
             <h1>Likely sellers</h1>
-            <span className="appbar-sub">
-              {agent ? agent.name : "No agent"} · Travis County farm
-            </span>
+            <span className="appbar-sub">Travis County</span>
           </div>
           <div className="appbar-meta">
             <span className="territory-chip">
               <span className="dot" /> {zips.join(" · ")}
-            </span>
-            <span className="freshness-inline">
-              TCAD roll <b>Jul 2025</b> · model phase0-v1
             </span>
           </div>
         </header>
@@ -50,33 +45,29 @@ export default async function Home() {
         <div className="content">
           <section className="kpis">
             <div className="kpi headline">
-              <div className="kpi-label">Top-decile precision</div>
+              <div className="kpi-label">Model accuracy</div>
               <div className="kpi-value">1.97×</div>
-              <div className="kpi-sub">vs county base rate (holdout)</div>
             </div>
             <div className="kpi">
-              <div className="kpi-label">Properties scored</div>
+              <div className="kpi-label">Homes scored</div>
               <div className="kpi-value">{stats.scored.toLocaleString()}</div>
-              <div className="kpi-sub">single-family, resolved</div>
             </div>
             <div className="kpi">
-              <div className="kpi-label">High-intent in farm</div>
+              <div className="kpi-label">High priority</div>
               <div className="kpi-value">{priorityCount}</div>
-              <div className="kpi-sub">P(list) ≥ 65% · knock first</div>
             </div>
             <div className="kpi">
-              <div className="kpi-label">Quarantined</div>
+              <div className="kpi-label">Needs review</div>
               <div className="kpi-value">{stats.quarantined.toLocaleString()}</div>
-              <div className="kpi-sub">unresolved · never surfaced</div>
             </div>
           </section>
 
           <SellerBoard properties={properties} />
 
           <p className="foot">
-            Score = P(market sale within 24 months), Phase 0 LightGBM on public TCAD records.
-            Every score ships with <span className="accent">factor provenance</span> — no black box.
-            Quarantined identity matches are never surfaced.
+            Each score estimates how likely a home is to sell in the next two years, based on
+            public county records. Every score lists the reasons behind it. Homes we couldn't
+            confidently identify are left out rather than guessed at.
           </p>
         </div>
       </main>

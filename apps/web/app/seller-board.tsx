@@ -195,8 +195,8 @@ export function SellerBoard({ properties }: { properties: ScoredProperty[] }) {
         <span>Score</span>
         <span>Property</span>
         <span>Owner</span>
-        <span style={{ textAlign: "right" }}>Est · Tenure</span>
-        <span>Why it fired</span>
+        <span style={{ textAlign: "right" }}>Value · Owned</span>
+        <span>Why</span>
       </div>
 
       <div className="list">

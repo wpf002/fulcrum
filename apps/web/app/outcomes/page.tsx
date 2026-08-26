@@ -68,65 +68,54 @@ export default async function Outcomes() {
       <main className="main">
         <header className="appbar">
           <div className="appbar-titles">
-            <h1>Model track record</h1>
-            <span className="appbar-sub">confirmed sales validate the predictions · the flywheel</span>
-          </div>
-          <div className="appbar-meta">
-            <span className="freshness-inline">{t.evaluated_window ?? "—"}</span>
+            <h1>Results</h1>
+            <span className="appbar-sub">How past predictions actually turned out</span>
           </div>
         </header>
 
         <div className="content">
           <section className="kpis">
             <div className="kpi headline">
-              <div className="kpi-label">Validated top-decile lift</div>
+              <div className="kpi-label">Model accuracy</div>
               <div className="kpi-value">{t.lift_at_top_decile ?? "—"}×</div>
-              <div className="kpi-sub">
-                {t.precision_at_top_decile != null
-                  ? `${(t.precision_at_top_decile * 100).toFixed(1)}% vs ${((t.base_rate ?? 0) * 100).toFixed(1)}% base`
-                  : "against real sales"}
-              </div>
             </div>
             <div className="kpi">
               <div className="kpi-label">Confirmed sales</div>
               <div className="kpi-value">{db.confirmedSales.toLocaleString()}</div>
-              <div className="kpi-sub">real deed transfers, labeled</div>
             </div>
             <div className="kpi">
-              <div className="kpi-label">Avg days flag → sale</div>
+              <div className="kpi-label">Avg days to sale</div>
               <div className="kpi-value">{t.avg_days_to_sale ?? "—"}</div>
-              <div className="kpi-sub">lead time to work the door</div>
             </div>
             <div className="kpi">
-              <div className="kpi-label">Closed via tracked buyer</div>
+              <div className="kpi-label">Closed with our buyers</div>
               <div className="kpi-value">{db.viaTrackedBuyer}</div>
-              <div className="kpi-sub">buyer-side proof · the moat</div>
             </div>
           </section>
 
           <div className="tr-grid">
-            {/* the flywheel: outcomes retrain the model */}
+            {/* confirmed sales feed the next model update */}
             {latestRetrain && (
               <section className="tr-card retrain">
                 <div className="tr-head">
-                  <h2>Latest retrain</h2>
+                  <h2>Latest model update</h2>
                   <span className={`ship-tag ${latestRetrain.shipped ? "ship" : "hold"}`}>
-                    {latestRetrain.shipped ? "SHIPPED" : "HELD"}
+                    {latestRetrain.shipped ? "Live" : "On hold"}
                   </span>
                 </div>
                 <p className="tr-note">
-                  {latestRetrain.new_outcomes_folded_in.toLocaleString()} new confirmed outcomes folded into training.
-                  Ships only if it beats the incumbent on a fresh holdout (kill criteria).
+                  {latestRetrain.new_outcomes_folded_in.toLocaleString()} newly confirmed sales were added to
+                  training. A new model only goes live if it beats the current one on sales it hasn't seen.
                 </p>
                 <div className="retrain-compare">
                   <div className="rc-col">
-                    <span className="rc-lab">Incumbent</span>
+                    <span className="rc-lab">Current</span>
                     <span className="rc-num">{incLift}×</span>
                     <span className="rc-ver">{latestRetrain.vs_incumbent}</span>
                   </div>
                   <div className="rc-arrow">→</div>
                   <div className="rc-col win">
-                    <span className="rc-lab">Candidate</span>
+                    <span className="rc-lab">New</span>
                     <span className="rc-num">{latestRetrain.candidate_lift}×</span>
                     <span className="rc-ver">{latestRetrain.version}</span>
                   </div>
@@ -134,9 +123,9 @@ export default async function Outcomes() {
               </section>
             )}
 
-            {/* top predictive factors */}
+            {/* what the model weighs most */}
             <section className="tr-card">
-              <div className="tr-head"><h2>Top predictive factors</h2></div>
+              <div className="tr-head"><h2>What predicts a sale</h2></div>
               <div className="factor-bars">
                 {factors.map((f) => (
                   <div key={f.factor} className="fbar">
@@ -152,14 +141,14 @@ export default async function Outcomes() {
 
           <div className="section-head">
             <h2>Recent confirmed sales</h2>
-            <span className="count">predicted, then validated by the county recorder</span>
+            <span className="count">checked against county records</span>
           </div>
 
           <div className="row-head outcome-head">
             <span>Sold</span>
             <span>Property</span>
             <span style={{ textAlign: "right" }}>Recorded</span>
-            <span style={{ textAlign: "right" }}>We predicted</span>
+            <span style={{ textAlign: "right" }}>Our score</span>
             <span>Source</span>
           </div>
           <div className="list">
@@ -179,15 +168,15 @@ export default async function Outcomes() {
                     score {o.predictedScore ?? "—"}
                   </div>
                 </div>
-                <div className="addr-sub">county recorder deed</div>
+                <div className="addr-sub">County deed record</div>
               </article>
             ))}
           </div>
 
           <p className="foot">
-            SmartZip can't run this loop — they have no buyer side to confirm outcomes with. Every
-            confirmed sale here re-labels a prediction and feeds the next retrain. Sale price is the AVM
-            estimate (Texas is <span className="accent">non-disclosure</span>); the sale and its timing are real.
+            Each confirmed sale is compared against what we predicted, and feeds the next model update.
+            Texas doesn't make sale prices public, so the amount shown is an estimate — the sale itself
+            and its date come from county records.
           </p>
         </div>
       </main>

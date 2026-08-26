@@ -108,7 +108,7 @@ export function MatchesBoard({ matches: initial }: { matches: Match[] }) {
       <div className="toolbar">
         <div className="section-head" style={{ margin: 0 }}>
           <h2 style={{ fontSize: 17 }}>Door-knock queue</h2>
-          <span className="count">{groups.length} {groups.length === 1 ? "buyer" : "buyers"} × likely-to-list homes</span>
+          <span className="count">{groups.length} {groups.length === 1 ? "buyer" : "buyers"} with matching homes</span>
         </div>
         <label className="sort">
           <input
@@ -116,7 +116,7 @@ export function MatchesBoard({ matches: initial }: { matches: Match[] }) {
             checked={showDismissed}
             onChange={(e) => { setShowDismissed(e.target.checked); setPage(0); }}
           />
-          <span>show dismissed</span>
+          <span>Show Dismissed</span>
         </label>
       </div>
 
