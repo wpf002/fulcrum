@@ -98,7 +98,7 @@ export default async function Outcomes() {
             {latestRetrain && (
               <section className="tr-card retrain">
                 <div className="tr-head">
-                  <h2>Latest model update</h2>
+                  <h2>Latest Model Update</h2>
                   <span className={`ship-tag ${latestRetrain.shipped ? "ship" : "hold"}`}>
                     {latestRetrain.shipped ? "Live" : "On hold"}
                   </span>
@@ -125,7 +125,7 @@ export default async function Outcomes() {
 
             {/* what the model weighs most */}
             <section className="tr-card">
-              <div className="tr-head"><h2>What predicts a sale</h2></div>
+              <div className="tr-head"><h2>What Predicts a Sale</h2></div>
               <div className="factor-bars">
                 {factors.map((f) => (
                   <div key={f.factor} className="fbar">
@@ -140,7 +140,7 @@ export default async function Outcomes() {
           </div>
 
           <div className="section-head">
-            <h2>Recent confirmed sales</h2>
+            <h2>Recent Confirmed Sales</h2>
             <span className="count">checked against county records</span>
           </div>
 

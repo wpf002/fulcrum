@@ -84,7 +84,7 @@ export default async function Leads() {
       <main className="main">
         <header className="appbar">
           <div className="appbar-titles">
-            <h1>Buyer leads</h1>
+            <h1>Buyer Leads</h1>
             <span className="appbar-sub">People who used the tools on your site</span>
           </div>
         </header>

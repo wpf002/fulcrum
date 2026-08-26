@@ -438,3 +438,33 @@ body {
   font-variant-numeric: tabular-nums;
 }
 .pg-status b { color: var(--ink); font-weight: 500; }
+
+/* ── dashboard overview ── */
+.dash-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+.dash-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; padding: 16px 18px; box-shadow: var(--shadow-tile);
+}
+.dash-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 10px; }
+.dash-head h2 {
+  font-family: var(--font-display); font-optical-sizing: auto; font-weight: 600;
+  font-size: 16px; margin: 0; color: var(--ink);
+}
+.dash-head a { font-size: 12px; color: var(--accent); text-decoration: none; }
+.dash-head a:hover { text-decoration: underline; }
+.dash-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.dash-list li {
+  display: flex; align-items: center; gap: 12px;
+  padding: 9px 0; border-top: 1px solid var(--border); font-size: 13.5px;
+}
+.dash-list li:first-child { border-top: 0; }
+.dash-score {
+  flex: none; min-width: 30px; font-family: var(--font-display); font-optical-sizing: auto;
+  font-weight: 600; font-size: 17px; color: var(--accent); font-variant-numeric: tabular-nums;
+}
+.dash-list.plain .dash-score { display: none; }
+.dash-main { flex: 1; min-width: 0; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dash-main b { color: var(--ink); font-weight: 600; }
+.dash-meta { flex: none; font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.dash-empty { font-size: 13px; color: var(--muted); margin: 4px 0 0; }
+@media (max-width: 980px) { .dash-grid { grid-template-columns: 1fr; } }

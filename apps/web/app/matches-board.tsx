@@ -107,7 +107,7 @@ export function MatchesBoard({ matches: initial }: { matches: Match[] }) {
     <>
       <div className="toolbar">
         <div className="section-head" style={{ margin: 0 }}>
-          <h2 style={{ fontSize: 17 }}>Door-knock queue</h2>
+          <h2 style={{ fontSize: 17 }}>Door-Knock Queue</h2>
           <span className="count">{groups.length} {groups.length === 1 ? "buyer" : "buyers"} with matching homes</span>
         </div>
         <label className="sort">
@@ -129,8 +129,7 @@ export function MatchesBoard({ matches: initial }: { matches: Match[] }) {
                 <div className="buyer-id">
                   <span className="buyer-name">{titleCase(b.name)}</span>
                   <span className="buyer-meta">
-                    {band(b.priceBandMinCents, b.priceBandMaxCents)} · {timeline(b.timelineMonths)} ·{" "}
-                    readiness <b>{b.readinessScore}</b>
+                    {band(b.priceBandMinCents, b.priceBandMaxCents)} · {timeline(b.timelineMonths)}
                   </span>
                 </div>
                 <div className="buyer-contact">

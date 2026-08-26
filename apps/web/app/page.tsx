@@ -32,7 +32,7 @@ export default async function Home() {
       <main className="main">
         <header className="appbar">
           <div className="appbar-titles">
-            <h1>Likely sellers</h1>
+            <h1>Likely Sellers</h1>
             <span className="appbar-sub">Travis County</span>
           </div>
           <div className="appbar-meta">
