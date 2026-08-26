@@ -38,19 +38,19 @@ export default async function Matches() {
         <div className="content">
           <section className="kpis">
             <div className="kpi headline">
-              <div className="kpi-label">Best match</div>
+              <div className="kpi-label">Best Match</div>
               <div className="kpi-value">{topScore}</div>
             </div>
             <div className="kpi">
-              <div className="kpi-label">Active buyers</div>
+              <div className="kpi-label">Active Buyers</div>
               <div className="kpi-value">{summary.buyers}</div>
             </div>
             <div className="kpi">
-              <div className="kpi-label">Homes matched</div>
+              <div className="kpi-label">Homes Matched</div>
               <div className="kpi-value">{summary.properties}</div>
             </div>
             <div className="kpi">
-              <div className="kpi-label">Not yet contacted</div>
+              <div className="kpi-label">Not Yet Contacted</div>
               <div className="kpi-value">{summary.surfaced}</div>
             </div>
           </section>

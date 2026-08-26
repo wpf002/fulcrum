@@ -149,7 +149,7 @@ export function MatchesBoard({ matches: initial }: { matches: Match[] }) {
                     >
                       <div className="match-strength">
                         <span className="ms-num">{Math.round(m.matchScore * 100)}</span>
-                        <span className="ms-lab">match</span>
+                        <span className="ms-lab">Match</span>
                       </div>
 
                       <div className="match-prop">

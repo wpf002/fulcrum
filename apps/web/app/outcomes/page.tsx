@@ -76,19 +76,19 @@ export default async function Outcomes() {
         <div className="content">
           <section className="kpis">
             <div className="kpi headline">
-              <div className="kpi-label">Model accuracy</div>
+              <div className="kpi-label">Model Accuracy</div>
               <div className="kpi-value">{t.lift_at_top_decile ?? "—"}×</div>
             </div>
             <div className="kpi">
-              <div className="kpi-label">Confirmed sales</div>
+              <div className="kpi-label">Confirmed Sales</div>
               <div className="kpi-value">{db.confirmedSales.toLocaleString()}</div>
             </div>
             <div className="kpi">
-              <div className="kpi-label">Avg days to sale</div>
+              <div className="kpi-label">Avg Days to Sale</div>
               <div className="kpi-value">{t.avg_days_to_sale ?? "—"}</div>
             </div>
             <div className="kpi">
-              <div className="kpi-label">Closed with our buyers</div>
+              <div className="kpi-label">Closed With Our Buyers</div>
               <div className="kpi-value">{db.viaTrackedBuyer}</div>
             </div>
           </section>
@@ -141,14 +141,14 @@ export default async function Outcomes() {
 
           <div className="section-head">
             <h2>Recent Confirmed Sales</h2>
-            <span className="count">checked against county records</span>
+            <span className="count">Checked against county records</span>
           </div>
 
           <div className="row-head outcome-head">
             <span>Sold</span>
             <span>Property</span>
             <span style={{ textAlign: "right" }}>Recorded</span>
-            <span style={{ textAlign: "right" }}>Our score</span>
+            <span style={{ textAlign: "right" }}>Our Score</span>
             <span>Source</span>
           </div>
           <div className="list">
@@ -158,7 +158,7 @@ export default async function Outcomes() {
                 <div className="addr-cell">
                   <div className="addr">
                     {titleCase(o.address)}
-                    {o.viaTrackedBuyer && <span className="ev-badge">Tracked buyer</span>}
+                    {o.viaTrackedBuyer && <span className="ev-badge">Tracked Buyer</span>}
                   </div>
                   <div className="addr-sub">{o.zip}</div>
                 </div>
@@ -168,7 +168,7 @@ export default async function Outcomes() {
                     score {o.predictedScore ?? "—"}
                   </div>
                 </div>
-                <div className="addr-sub">County deed record</div>
+                <div className="addr-sub">County Deed Record</div>
               </article>
             ))}
           </div>

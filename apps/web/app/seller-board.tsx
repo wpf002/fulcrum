@@ -95,10 +95,10 @@ const FILTERS: { key: OwnerKey; label: string }[] = [
 ];
 
 const SORTS: { key: SortKey; label: string }[] = [
-  { key: "score", label: "List likelihood" },
-  { key: "value", label: "Est. value" },
+  { key: "score", label: "List Likelihood" },
+  { key: "value", label: "Est. Value" },
   { key: "tenure", label: "Tenure" },
-  { key: "velocity", label: "Recently moved" },
+  { key: "velocity", label: "Recently Moved" },
 ];
 
 const PAGE_SIZE = 25;
@@ -184,10 +184,9 @@ export function SellerBoard({ properties }: { properties: ScoredProperty[] }) {
       </div>
 
       <div className="result-line">
-        {rows.length} {rows.length === 1 ? "property" : "properties"}
+        {rows.length} {rows.length === 1 ? "Property" : "Properties"}
         {owner !== "ALL" && ` · ${FILTERS.find((f) => f.key === owner)?.label}`}
         {query && ` · matching "${query}"`}
-        {rows.length > 0 && ` · ${start + 1}–${start + pageRows.length}`}
       </div>
 
       <div className="row-head">

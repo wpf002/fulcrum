@@ -92,15 +92,15 @@ export default async function Leads() {
         <div className="content">
           <section className="kpis">
             <div className="kpi headline">
-              <div className="kpi-label">Total leads</div>
+              <div className="kpi-label">Total Leads</div>
               <div className="kpi-value">{leads.length}</div>
             </div>
             <div className="kpi">
-              <div className="kpi-label">Ready to buy</div>
+              <div className="kpi-label">Ready to Buy</div>
               <div className="kpi-value">{hot}</div>
             </div>
             <div className="kpi">
-              <div className="kpi-label">Can text</div>
+              <div className="kpi-label">Can Text</div>
               <div className="kpi-value">{consentedSms}</div>
             </div>
             <div className="kpi">
@@ -155,7 +155,7 @@ export default async function Leads() {
                     <span className={`ch ${opt.email ? "on" : ""}`}>Email</span>
                     <span className={`ch ${opt.sms ? "on" : ""}`}>SMS</span>
                     <span className={`ch ${opt.tcpa ? "on" : ""}`}>TCPA</span>
-                    {l.mortgageReadinessAnswers?.preApproved && <span className="ch flag">Pre-approved</span>}
+                    {l.mortgageReadinessAnswers?.preApproved && <span className="ch flag">Pre-Approved</span>}
                   </div>
 
                   <div className="metrics">
@@ -185,7 +185,7 @@ export default async function Leads() {
                   href={`${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3011"}/widget/demo`}
                   style={{ color: "var(--accent)" }}
                 >
-                  the demo landing page
+                  The Demo Landing Page
                 </a>{" "}
                 and fill it out to see a lead appear here.
               </div>

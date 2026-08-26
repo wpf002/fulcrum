@@ -93,19 +93,19 @@ export default async function Dashboard() {
         <div className="content">
           <section className="kpis">
             <div className="kpi headline">
-              <div className="kpi-label">Homes to work</div>
+              <div className="kpi-label">Homes to Work</div>
               <div className="kpi-value">{highPriority}</div>
             </div>
             <div className="kpi">
-              <div className="kpi-label">Buyers ready</div>
+              <div className="kpi-label">Buyers Ready</div>
               <div className="kpi-value">{readyBuyers}</div>
             </div>
             <div className="kpi">
-              <div className="kpi-label">Matches waiting</div>
+              <div className="kpi-label">Matches Waiting</div>
               <div className="kpi-value">{summary.surfaced}</div>
             </div>
             <div className="kpi">
-              <div className="kpi-label">Model accuracy</div>
+              <div className="kpi-label">Model Accuracy</div>
               <div className="kpi-value">{results.track?.lift_at_top_decile ?? "—"}×</div>
             </div>
           </section>
@@ -114,7 +114,7 @@ export default async function Dashboard() {
             <section className="dash-card">
               <div className="dash-head">
                 <h2>Start Here</h2>
-                <a href="/matches">All matches →</a>
+                <a href="/matches">All Matches →</a>
               </div>
               {topMatches.length ? (
                 <ul className="dash-list">
@@ -136,7 +136,7 @@ export default async function Dashboard() {
             <section className="dash-card">
               <div className="dash-head">
                 <h2>Newest Leads</h2>
-                <a href="/leads">All leads →</a>
+                <a href="/leads">All Leads →</a>
               </div>
               {recentLeads.length ? (
                 <ul className="dash-list">
@@ -159,7 +159,7 @@ export default async function Dashboard() {
             <section className="dash-card">
               <div className="dash-head">
                 <h2>Most Likely to Sell</h2>
-                <a href="/">All homes →</a>
+                <a href="/">All Homes →</a>
               </div>
               <ul className="dash-list">
                 {topHomes.map((p) => (
@@ -182,10 +182,10 @@ export default async function Dashboard() {
                 <a href="/outcomes">Results →</a>
               </div>
               <ul className="dash-list plain">
-                <li><span className="dash-main">Sales confirmed so far</span><span className="dash-meta">{results.db.confirmedSales.toLocaleString()}</span></li>
-                <li><span className="dash-main">Average days to sale</span><span className="dash-meta">{results.track?.avg_days_to_sale ?? "—"}</span></li>
-                <li><span className="dash-main">Buyers with matches</span><span className="dash-meta">{summary.buyers}</span></li>
-                <li><span className="dash-main">Homes matched</span><span className="dash-meta">{summary.properties}</span></li>
+                <li><span className="dash-main">Sales Confirmed So Far</span><span className="dash-meta">{results.db.confirmedSales.toLocaleString()}</span></li>
+                <li><span className="dash-main">Average Days to Sale</span><span className="dash-meta">{results.track?.avg_days_to_sale ?? "—"}</span></li>
+                <li><span className="dash-main">Buyers With Matches</span><span className="dash-meta">{summary.buyers}</span></li>
+                <li><span className="dash-main">Homes Matched</span><span className="dash-meta">{summary.properties}</span></li>
               </ul>
             </section>
           </div>

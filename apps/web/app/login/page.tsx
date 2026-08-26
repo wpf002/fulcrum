@@ -91,7 +91,7 @@ export default function Login() {
             setError("");
           }}
         >
-          {mode === "login" ? "Need an account? Sign up" : "Have an account? Log in"}
+          {mode === "login" ? "Need an Account? Sign Up" : "Have an Account? Log In"}
         </button>
 
         {mode === "login" && (

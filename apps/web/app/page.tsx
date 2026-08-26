@@ -45,19 +45,19 @@ export default async function Home() {
         <div className="content">
           <section className="kpis">
             <div className="kpi headline">
-              <div className="kpi-label">Model accuracy</div>
+              <div className="kpi-label">Model Accuracy</div>
               <div className="kpi-value">1.97×</div>
             </div>
             <div className="kpi">
-              <div className="kpi-label">Homes scored</div>
+              <div className="kpi-label">Homes Scored</div>
               <div className="kpi-value">{stats.scored.toLocaleString()}</div>
             </div>
             <div className="kpi">
-              <div className="kpi-label">High priority</div>
+              <div className="kpi-label">High Priority</div>
               <div className="kpi-value">{priorityCount}</div>
             </div>
             <div className="kpi">
-              <div className="kpi-label">Needs review</div>
+              <div className="kpi-label">Needs Review</div>
               <div className="kpi-value">{stats.quarantined.toLocaleString()}</div>
             </div>
           </section>
