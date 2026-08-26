@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { titleCase } from "../lib/format";
+import { Pager } from "./pager";
 
 interface Factor {
   label: string;
@@ -53,10 +55,6 @@ function timeline(m: number | null): string {
   return "exploring";
 }
 
-function titleCase(s: string): string {
-  return s.toLowerCase().replace(/\b([a-z])/g, (m) => m.toUpperCase()).replace(/\bLlc\b/g, "LLC");
-}
-
 function strength(score: number): string {
   const v = score * 100;
   if (v >= 70) return "#c1372b";
@@ -68,6 +66,10 @@ function strength(score: number): string {
 export function MatchesBoard({ matches: initial }: { matches: Match[] }) {
   const [matches, setMatches] = useState(initial);
   const [showDismissed, setShowDismissed] = useState(false);
+  const [page, setPage] = useState(0);
+
+  // paged by BUYER GROUP — a buyer and their ranked homes stay together
+  const GROUPS_PER_PAGE = 3;
 
   async function setStatus(id: string, status: Match["status"]) {
     setMatches((ms) => ms.map((m) => (m.id === id ? { ...m, status } : m)));
@@ -96,31 +98,36 @@ export function MatchesBoard({ matches: initial }: { matches: Match[] }) {
       .sort((a, b) => b[0].matchScore - a[0].matchScore);
   }, [matches, showDismissed]);
 
+  const pageCount = Math.max(1, Math.ceil(groups.length / GROUPS_PER_PAGE));
+  const current = Math.min(page, pageCount - 1);
+  const start = current * GROUPS_PER_PAGE;
+  const pageGroups = groups.slice(start, start + GROUPS_PER_PAGE);
+
   return (
     <>
       <div className="toolbar">
         <div className="section-head" style={{ margin: 0 }}>
           <h2 style={{ fontSize: 17 }}>Door-knock queue</h2>
-          <span className="count">warm buyers × likely-to-list homes</span>
+          <span className="count">{groups.length} {groups.length === 1 ? "buyer" : "buyers"} × likely-to-list homes</span>
         </div>
         <label className="sort">
           <input
             type="checkbox"
             checked={showDismissed}
-            onChange={(e) => setShowDismissed(e.target.checked)}
+            onChange={(e) => { setShowDismissed(e.target.checked); setPage(0); }}
           />
           <span>show dismissed</span>
         </label>
       </div>
 
       <div className="match-groups">
-        {groups.map((group) => {
+        {pageGroups.map((group) => {
           const b = group[0].buyer;
           return (
             <section key={b.id} className="match-group">
               <header className="buyer-head">
                 <div className="buyer-id">
-                  <span className="buyer-name">{b.name}</span>
+                  <span className="buyer-name">{titleCase(b.name)}</span>
                   <span className="buyer-meta">
                     {band(b.priceBandMinCents, b.priceBandMaxCents)} · {timeline(b.timelineMonths)} ·{" "}
                     readiness <b>{b.readinessScore}</b>
@@ -200,6 +207,8 @@ export function MatchesBoard({ matches: initial }: { matches: Match[] }) {
           </div>
         )}
       </div>
+
+      <Pager page={current} pageCount={pageCount} onChange={setPage} label="buyers" />
     </>
   );
 }

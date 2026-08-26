@@ -1,5 +1,6 @@
 import { Sidebar } from "../sidebar";
 import { apiGet, getMe } from "../../lib/api";
+import { titleCase } from "../../lib/format";
 
 interface Consent {
   termsVersion: string;
@@ -142,7 +143,7 @@ export default async function Leads() {
 
                   <div className="addr-cell">
                     <div className="addr">
-                      {[l.firstName, l.lastName].filter(Boolean).join(" ") || "Anonymous buyer"}
+                      {titleCase([l.firstName, l.lastName].filter(Boolean).join(" ")) || "Anonymous buyer"}
                     </div>
                     <div className="addr-sub">
                       {l.email ?? "no email"}

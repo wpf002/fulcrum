@@ -1,5 +1,6 @@
 import { Sidebar } from "../sidebar";
 import { apiGet } from "../../lib/api";
+import { titleCase } from "../../lib/format";
 
 interface TrackRecord {
   track: {
@@ -46,9 +47,6 @@ async function getData(): Promise<TrackRecord> {
   return apiGet<TrackRecord>("/v1/model/track-record");
 }
 
-function titleCase(s: string): string {
-  return s.toLowerCase().replace(/\b([a-z])/g, (m) => m.toUpperCase());
-}
 function money(cents: string): string {
   return `$${Math.round(Number(BigInt(cents) / 100n) / 1000)}K`;
 }

@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { titleCase } from "../lib/format";
+import { Pager } from "./pager";
 
 export interface Factor {
   label: string;
@@ -38,14 +40,6 @@ function heat(s: number): string {
   if (s >= 45) return "#c08a2e";
   if (s >= 30) return "#8a8f68";
   return "#5b6b7a";
-}
-
-function titleCase(s: string): string {
-  return s
-    .toLowerCase()
-    .replace(/\b([a-z])/g, (m) => m.toUpperCase())
-    .replace(/\bLlc\b/g, "LLC")
-    .replace(/\bTr\b/g, "TR");
 }
 
 function money(cents: string | null): string {
@@ -107,12 +101,13 @@ const SORTS: { key: SortKey; label: string }[] = [
   { key: "velocity", label: "Recently moved" },
 ];
 
-const VISIBLE = 80; // keep the rendered list snappy; filters narrow from the full set
+const PAGE_SIZE = 25;
 
 export function SellerBoard({ properties }: { properties: ScoredProperty[] }) {
   const [query, setQuery] = useState("");
   const [owner, setOwner] = useState<OwnerKey>("ALL");
   const [sort, setSort] = useState<SortKey>("score");
+  const [page, setPage] = useState(0);
 
   const rows = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -136,6 +131,16 @@ export function SellerBoard({ properties }: { properties: ScoredProperty[] }) {
     return out;
   }, [properties, query, owner, sort]);
 
+  const pageCount = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+  const current = Math.min(page, pageCount - 1);
+  const start = current * PAGE_SIZE;
+  const pageRows = rows.slice(start, start + PAGE_SIZE);
+
+  function change(fn: () => void) {
+    fn();
+    setPage(0);
+  }
+
   return (
     <>
       <div className="toolbar">
@@ -146,7 +151,7 @@ export function SellerBoard({ properties }: { properties: ScoredProperty[] }) {
           </svg>
           <input
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => change(() => setQuery(e.target.value))}
             placeholder="Search address, owner, or zip"
             aria-label="Search properties"
           />
@@ -158,7 +163,7 @@ export function SellerBoard({ properties }: { properties: ScoredProperty[] }) {
               <button
                 key={f.key}
                 className={owner === f.key ? "on" : ""}
-                onClick={() => setOwner(f.key)}
+                onClick={() => change(() => setOwner(f.key))}
                 type="button"
               >
                 {f.label}
@@ -167,7 +172,7 @@ export function SellerBoard({ properties }: { properties: ScoredProperty[] }) {
           </div>
           <label className="sort">
             <span>Sort</span>
-            <select value={sort} onChange={(e) => setSort(e.target.value as SortKey)}>
+            <select value={sort} onChange={(e) => change(() => setSort(e.target.value as SortKey))}>
               {SORTS.map((s) => (
                 <option key={s.key} value={s.key}>
                   {s.label}
@@ -182,7 +187,7 @@ export function SellerBoard({ properties }: { properties: ScoredProperty[] }) {
         {rows.length} {rows.length === 1 ? "property" : "properties"}
         {owner !== "ALL" && ` · ${FILTERS.find((f) => f.key === owner)?.label}`}
         {query && ` · matching "${query}"`}
-        {rows.length > VISIBLE && ` · showing top ${VISIBLE}`}
+        {rows.length > 0 && ` · ${start + 1}–${start + pageRows.length}`}
       </div>
 
       <div className="row-head">
@@ -195,7 +200,7 @@ export function SellerBoard({ properties }: { properties: ScoredProperty[] }) {
       </div>
 
       <div className="list">
-        {rows.slice(0, VISIBLE).map((p, i) => {
+        {pageRows.map((p, i) => {
           const s = listScore(p);
           const c = heat(s);
           const o = OWNER[p.ownerType ?? ""] ?? { cls: "entity", label: "—" };
@@ -205,7 +210,7 @@ export function SellerBoard({ properties }: { properties: ScoredProperty[] }) {
               className={`row${s >= 65 ? " priority" : ""}`}
               style={{ ["--heat" as string]: c }}
             >
-              <span className="rank">{String(i + 1).padStart(2, "0")}</span>
+              <span className="rank">{String(start + i + 1).padStart(2, "0")}</span>
 
               <div className="score-cell">
                 <span className="score-num">
@@ -254,6 +259,8 @@ export function SellerBoard({ properties }: { properties: ScoredProperty[] }) {
           <div className="empty">No properties match — clear the search or filter.</div>
         )}
       </div>
+
+      <Pager page={current} pageCount={pageCount} onChange={setPage} label="properties" />
     </>
   );
 }
