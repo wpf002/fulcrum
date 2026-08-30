@@ -5,10 +5,12 @@
   "main": "src/index.ts",
   "scripts": {
     "sync:fub": "tsx src/sync-fub.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "import:fub": "tsx src/import-fub.ts"
   },
   "dependencies": {
-    "@fulcrum/client": "workspace:*"
+    "@fulcrum/client": "workspace:*",
+    "@fulcrum/db": "workspace:*"
   },
   "devDependencies": {
     "tsx": "^4.16.0",

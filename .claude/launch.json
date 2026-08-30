@@ -19,7 +19,7 @@
         "@fulcrum/web",
         "dev"
       ],
-      "port": 3010
+      "port": 3012
     }
   ]
 }

@@ -134,6 +134,9 @@ importers:
       '@fulcrum/client':
         specifier: workspace:*
         version: link:../client
+      '@fulcrum/db':
+        specifier: workspace:*
+        version: link:../db
     devDependencies:
       '@types/node':
         specifier: ^22.0.0
