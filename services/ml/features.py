@@ -66,7 +66,27 @@ EVENT_PRIORS = {
     "TAX_DELINQUENT": ("Tax delinquent", 1.8, 730),
     "LIEN": ("Lien filed", 1.5, 540),
     "CODE_VIOLATION": ("Code violation", 1.3, 365),
+    # Permits are ambiguous, so they carry small multipliers and are split by
+    # intent at ingest time (payload.signal): prep work often precedes a
+    # listing; a major investment argues the owner is staying put.
+    "PERMIT": ("Recent permit work", 1.25, 365),
+    "PERMIT_INVESTMENT": ("Major renovation (owner investing)", 0.8, 540),
 }
+
+
+def prior_key(ev: dict) -> str:
+    """Which prior applies to this event.
+
+    Most events map straight from their type. Permits are split by intent —
+    the ingest records `signal` in the payload ("prep" vs "investment") — so a
+    major renovation uses the downward PERMIT_INVESTMENT prior instead.
+    """
+    etype = ev.get("type") or ""
+    if etype == "PERMIT":
+        payload = ev.get("payload") or {}
+        if isinstance(payload, dict) and payload.get("signal") == "investment":
+            return "PERMIT_INVESTMENT"
+    return etype
 
 
 def apply_event_priors(base_p: float, events: list[dict], now: datetime | None = None):
@@ -79,11 +99,13 @@ def apply_event_priors(base_p: float, events: list[dict], now: datetime | None =
     odds = base_p / (1 - base_p) if 0 < base_p < 1 else max(base_p, 1e-6)
     factors: list[dict] = []
 
-    # keep only the strongest still-active instance of each event type
+    # keep the STRONGEST still-active instance of each event type. "Strongest"
+    # means furthest from 1.0 in the direction that prior points — a downward
+    # prior (multiplier < 1) is strongest at its smallest value.
     best: dict[str, float] = {}
     for ev in events:
-        etype = ev.get("type")
-        prior = EVENT_PRIORS.get(etype)
+        key = prior_key(ev)
+        prior = EVENT_PRIORS.get(key)
         if not prior:
             continue
         _, mult, decay_days = prior
@@ -96,18 +118,19 @@ def apply_event_priors(base_p: float, events: list[dict], now: datetime | None =
         if age_days > decay_days:
             continue
         decay = max(0.0, 1.0 - age_days / decay_days)
-        effective = 1.0 + (mult - 1.0) * decay
-        if effective > best.get(etype, 0):
-            best[etype] = effective
+        effective = 1.0 + (mult - 1.0) * decay  # decays toward 1.0 (no effect)
+        prev = best.get(key)
+        if prev is None or abs(math.log(effective)) > abs(math.log(prev)):
+            best[key] = effective
 
-    for etype, effective in best.items():
-        label, _, _ = EVENT_PRIORS[etype]
+    for key, effective in best.items():
+        label, _, _ = EVENT_PRIORS[key]
         odds *= effective
         factors.append(
             {
                 "label": label,
-                "weight": round(math.log(effective), 4),
-                "direction": "up",
+                "weight": round(abs(math.log(effective)), 4),
+                "direction": "up" if effective >= 1.0 else "down",
             }
         )
 

@@ -148,7 +148,7 @@ def score_seller(req: SellerScoreRequest):
             "zip": prop_row[5],
         }
         event_rows = conn.execute(
-            'SELECT type, "occurredAt" FROM "PropertyEvent" WHERE "propertyId" = %s',
+            'SELECT type, "occurredAt", payload FROM "PropertyEvent" WHERE "propertyId" = %s',
             (req.propertyId,),
         ).fetchall()
         # Base must be an EVENT-FREE score, never an already-boosted one —
@@ -160,7 +160,8 @@ def score_seller(req: SellerScoreRequest):
                ORDER BY "computedAt" DESC LIMIT 1''',
             (req.propertyId,),
         ).fetchone()
-    events = [{"type": r[0], "occurredAt": r[1]} for r in event_rows]
+    # payload carries permit intent (prep vs investment) — see features.prior_key
+    events = [{"type": r[0], "occurredAt": r[1], "payload": r[2]} for r in event_rows]
     prior_prob = prior[0] if prior else None
     prior_factors = prior[1] if prior else None
 

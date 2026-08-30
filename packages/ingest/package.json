@@ -10,7 +10,8 @@
     "ingest:probate": "tsx src/probate-ingest.ts",
     "foreclosure:ingest": "tsx src/foreclosure-ingest.ts",
     "match": "tsx src/match-engine.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "ingest:permits": "tsx src/permit-ingest.ts"
   },
   "dependencies": {
     "@fulcrum/db": "workspace:*",
